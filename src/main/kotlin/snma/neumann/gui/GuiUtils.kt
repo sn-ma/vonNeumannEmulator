@@ -6,7 +6,6 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventHandler
 import javafx.event.EventTarget
 import javafx.scene.control.TextField
-import javafx.scene.control.TextFormatter
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
 import javafx.util.StringConverter
@@ -16,11 +15,6 @@ import tornadofx.*
 import kotlin.reflect.KProperty1
 
 object GuiUtils {
-    private fun createMemCellTextFormatter(initialValue: Int, bytesCount: Int) = TextFormatter(object: StringConverter<Int>() {
-        override fun toString(int: Int?): String? = intToHexString(int, bytesCount)
-        override fun fromString(str: String?) = hexStringToInt(str)
-    }, initialValue, CustomTextFilter { it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }})
-
     private fun intToHexString(intVal: Int?, bytesCount: Int): String? {
         if (intVal == null) return null
         var answ = intVal.toString(16).uppercase()
@@ -86,9 +80,8 @@ object GuiUtils {
         }
         val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
         return textfield(viewModel.stringProperty).apply {
-//            textFormatter = createMemCellTextFormatter(viewModel.intProperty.value, bytesCount)
+            filterInput { it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' } }
             model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
-//            viewModel.wasRecentlyModifiedProperty.toObservableChanges().subscribe { // FIXME
                 if (it.newVal) {
                     style {
                         backgroundColor += Color.DARKORANGE
@@ -106,15 +99,17 @@ object GuiUtils {
                     parent.requestFocus()
                 }
             }
-            action { parent.requestFocus() } // On press any Enter key
+            action {
+                parent.requestFocus()
+            } // On press any Enter key
             focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
-//            validator { str ->
-//                if (str == null || str.replace(" ", "").toIntOrNull(16) == null) {
-//                    error("Please enter the correct HEX digit")
-//                } else {
-//                    null
-//                }
-//            }
+            validator { str ->
+                if (hexStringToInt(str) == null) {
+                    error("Please enter the correct HEX number")
+                } else {
+                    null
+                }
+            }
 
             op?.invoke(this)
         }

@@ -32,6 +32,9 @@ class CpuModel: HardwareItem {
         if (Random.Default.nextInt(3) == 0) {
             registers[RegisterDescription.R_ADDRESS]!!.value += 1
         }
+        if (Random.Default.nextInt(3) == 0) {
+            registers[RegisterDescription.R_A]!!.value += 1
+        }
     }
 }
 
