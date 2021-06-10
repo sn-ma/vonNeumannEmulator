@@ -36,8 +36,12 @@ object GuiUtils {
         }
     }
 
-    fun hexStringToInt(str: String?): Int? =
-        str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toIntOrNull(16)
+    fun hexStringToInt(str: String?): Int? {
+        if (str == null) return null
+        val replacedStr = str.replace(" ", "").replace("""^0+""".toRegex(), "")
+        return if (replacedStr.isEmpty()) 0
+        else replacedStr.toIntOrNull(16)
+    }
 
     fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
         val numberStringConverter: StringConverter<Number> = NumberStringConverter()
@@ -71,7 +75,6 @@ object GuiUtils {
         }
     }
 
-    // FIXME get rid of code duplication
     fun EventTarget.memCellTextField(model: MemoryCell, op: (TextField.() -> Unit)? = null): TextField {
         val bytesCount = model.bytesCount
         val numStringConverter = object : StringConverter<Number>() {
@@ -80,7 +83,10 @@ object GuiUtils {
         }
         val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
         return textfield(viewModel.stringProperty).apply {
-            filterInput { it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' } }
+            filterInput {
+                !it.text.isNullOrEmpty() ||
+                        it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }
+            }
             model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
                 if (it.newVal) {
                     style {
