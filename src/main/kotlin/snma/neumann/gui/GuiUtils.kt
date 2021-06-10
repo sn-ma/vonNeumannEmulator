@@ -1,6 +1,7 @@
 package snma.neumann.gui
 
 import com.github.thomasnield.rxkotlinfx.toObservableChanges
+import javafx.application.Platform
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventHandler
@@ -64,7 +65,10 @@ object GuiUtils {
 
             action { parent.requestFocus() } // On press any Enter key
 
-            focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
+            focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) {
+                viewModel.commit()
+                viewModel.fixFormatting()
+            } })
 
             op?.invoke(this)
         }
@@ -98,7 +102,6 @@ object GuiUtils {
             override fun toString(number: Number?): String? = intToHexString(number?.toInt(), bytesCount)
             override fun fromString(string: String?): Number? = hexStringToInt(string)
         }
-//        val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
         return customFormattedTextField(
             model = model,
             propertyExtractor = MemoryCell::valueProperty,
@@ -144,6 +147,13 @@ private open class IntViewModel<M>(
     val stringProperty by lazy { // but this binding is obvious for value transformation
         BindingAwareSimpleStringProperty(this, intProperty.name).also { sp ->
             Bindings.bindBidirectional(sp, intProperty, numberStringConverter)
+        }
+    }
+
+    fun fixFormatting() {
+        val formattedStringValue = numberStringConverter.toString(intProperty.value)
+        if (stringProperty.value != formattedStringValue) {
+            Platform.runLater { stringProperty.value = formattedStringValue }
         }
     }
 }
