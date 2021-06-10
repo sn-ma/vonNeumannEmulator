@@ -54,7 +54,7 @@ object GuiUtils {
         numberStringConverter: StringConverter<Number>,
         op: (TextField.() -> Unit)?,
     ): TextField {
-        val viewModel = IntViewModel(model, propertyExtractor, numberStringConverter)
+        val viewModel = FormattedIntViewModel(model, propertyExtractor, numberStringConverter)
         return textfield(viewModel.stringProperty) {
             onKeyPressed = EventHandler { event ->
                 if (event.code == KeyCode.ESCAPE) {
@@ -136,7 +136,7 @@ object GuiUtils {
         }
     }
 
-    private class IntViewModel<M>(
+    private class FormattedIntViewModel<M>(
         model: M,
         propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
         private val numberStringConverter: StringConverter<Number>

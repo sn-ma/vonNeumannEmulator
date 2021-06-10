@@ -17,8 +17,11 @@ class AppMenu: View() {
             enableWhen(appStateModel.isRunningProperty.not())
             action { appStateModel.makeStep() }
         }
-        button("Run/Pause") {
+        button("Run") {
             action { appStateModel.isRunning = !appStateModel.isRunning }
+            appStateModel.isRunningProperty.addListener { _, _, isRunningValue ->
+                text = if (isRunningValue) "Stop" else "Run"
+            }
         }
 //        button("Reset")
         spacer { minWidth = 10.0 }
@@ -26,6 +29,7 @@ class AppMenu: View() {
         label("Tick: ")
         positiveIntTextField((app as MyApp).appStateModel, AppStateModel::tickPeriodProperty) {
             maxWidth = 70.0
+            enableWhen(appStateModel.isRunningProperty.not())
         }
         label("ms")
     }
