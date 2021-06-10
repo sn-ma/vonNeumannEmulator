@@ -1,7 +1,9 @@
 package snma.neumann.gui
 
 import com.github.thomasnield.rxkotlinfx.toObservableChanges
+import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventHandler
 import javafx.event.EventTarget
 import javafx.scene.control.TextField
@@ -9,16 +11,13 @@ import javafx.scene.control.TextFormatter
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
 import javafx.util.StringConverter
+import javafx.util.converter.NumberStringConverter
 import snma.neumann.model.MemoryCell
 import tornadofx.*
+import java.text.NumberFormat
 import kotlin.reflect.KProperty1
 
 object GuiUtils {
-    private fun createIntTextFormatter(initialValue: Int) = TextFormatter(object: StringConverter<Int>() {
-        override fun toString(int: Int?) = int?.toString()
-        override fun fromString(str: String?) = str?.toIntOrNull()
-    }, initialValue, CustomTextFilter { it.controlNewText.isInt() })
-
     private fun createMemCellTextFormatter(initialValue: Int, bytesCount: Int) = TextFormatter(object: StringConverter<Int>() {
         override fun toString(int: Int?): String? = intToHexString(int, bytesCount)
         override fun fromString(str: String?) = hexStringToInt(str)
@@ -46,12 +45,13 @@ object GuiUtils {
     }
 
     fun hexStringToInt(str: String?): Int? =
-        str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toInt(16)
+        str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toIntOrNull(16)
 
     fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
         val viewModel = IntViewModel(model, propertyExtractor)
-        return textfield(viewModel.intProperty) {
-            textFormatter = createIntTextFormatter(viewModel.intProperty.value)
+        return textfield(viewModel.stringProperty) {
+            filterInput { it.controlNewText.isInt() && !it.controlNewText.startsWith('0') }
+
             onKeyPressed = EventHandler { event ->
                 if (event.code == KeyCode.ESCAPE) {
                     viewModel.rollback()
@@ -76,9 +76,13 @@ object GuiUtils {
     // FIXME get rid of code duplication
     fun EventTarget.memCellTextField(model: MemoryCell, op: (TextField.() -> Unit)? = null): TextField {
         val bytesCount = model.bytesCount
-        val viewModel = MemoryCellViewModel(model)
-        return textfield(viewModel.intProperty).apply {
-            textFormatter = createMemCellTextFormatter(viewModel.intProperty.value, bytesCount)
+        val numStringConverter = object : StringConverter<Number>() {
+            override fun toString(number: Number?): String? = intToHexString(number?.toInt(), bytesCount)
+            override fun fromString(string: String?): Number? = hexStringToInt(string)
+        }
+        val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
+        return textfield(viewModel.stringProperty).apply {
+//            textFormatter = createMemCellTextFormatter(viewModel.intProperty.value, bytesCount)
             model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
 //            viewModel.wasRecentlyModifiedProperty.toObservableChanges().subscribe { // FIXME
                 if (it.newVal) {
@@ -100,13 +104,13 @@ object GuiUtils {
             }
             action { parent.requestFocus() } // On press any Enter key
             focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
-            validator { str ->
-                if (str == null || str.replace(" ", "").toIntOrNull(16) == null) {
-                    error("Please enter the correct HEX digit")
-                } else {
-                    null
-                }
-            }
+//            validator { str ->
+//                if (str == null || str.replace(" ", "").toIntOrNull(16) == null) {
+//                    error("Please enter the correct HEX digit")
+//                } else {
+//                    null
+//                }
+//            }
 
             op?.invoke(this)
         }
@@ -115,18 +119,13 @@ object GuiUtils {
 
 private open class IntViewModel<M>(
     model: M,
-    propertyExtractor: KProperty1<M, SimpleIntegerProperty>
+    propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
+    numberStringConverter: StringConverter<Number> = NumberStringConverter() // FIXME number format?
 ) : ItemViewModel<M>(model) {
-//    val intProperty = bind(propertyExtractor)
-    val intProperty by lazy {
-        val upperProperty = propertyExtractor(model)
-        BindingAwareSimpleIntegerProperty(this, upperProperty.name).apply { this.bindBidirectional(upperProperty) }
+    val stringProperty by lazy {
+        val intProperty = propertyExtractor(model)
+        BindingAwareSimpleStringProperty(this, intProperty.name).also { sp ->
+            Bindings.bindBidirectional(sp, intProperty, numberStringConverter)
+        }
     }
-//    val intProperty = propertyExtractor(model).stringBinding { it?.toInt()?.toString(16) }
-}
-
-private class MemoryCellViewModel( // FIXME mb this class could be removed
-    model: MemoryCell,
-) : IntViewModel<MemoryCell>(model, MemoryCell::valueProperty) {
-    val wasRecentlyModifiedProperty = bind { model.wasRecentlyModified.toProperty() }
 }
