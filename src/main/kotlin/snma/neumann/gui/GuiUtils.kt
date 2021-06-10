@@ -135,25 +135,25 @@ object GuiUtils {
             op?.invoke(this)
         }
     }
-}
 
-private open class IntViewModel<M>(
-    model: M,
-    propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
-    private val numberStringConverter: StringConverter<Number>
-) : ItemViewModel<M>(model) {
-    val intProperty = bind(propertyExtractor) // We must use this binding for rollback to work
+    private open class IntViewModel<M>(
+        model: M,
+        propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
+        private val numberStringConverter: StringConverter<Number>
+    ) : ItemViewModel<M>(model) {
+        val intProperty = bind(propertyExtractor) // We must use this binding for rollback to work
 
-    val stringProperty by lazy { // but this binding is obvious for value transformation
-        BindingAwareSimpleStringProperty(this, intProperty.name).also { sp ->
-            Bindings.bindBidirectional(sp, intProperty, numberStringConverter)
+        val stringProperty by lazy { // but this binding is obvious for value transformation
+            BindingAwareSimpleStringProperty(this, intProperty.name).also { sp ->
+                Bindings.bindBidirectional(sp, intProperty, numberStringConverter)
+            }
         }
-    }
 
-    fun fixFormatting() {
-        val formattedStringValue = numberStringConverter.toString(intProperty.value)
-        if (stringProperty.value != formattedStringValue) {
-            Platform.runLater { stringProperty.value = formattedStringValue }
+        fun fixFormatting() {
+            val formattedStringValue = numberStringConverter.toString(intProperty.value)
+            if (stringProperty.value != formattedStringValue) {
+                Platform.runLater { stringProperty.value = formattedStringValue }
+            }
         }
     }
 }
