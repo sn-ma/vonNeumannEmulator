@@ -21,6 +21,8 @@ object GuiUtils {
         val zeroesToAdd = 2 * bytesCount - answ.length
         if (zeroesToAdd > 0) {
             answ = "0".repeat(zeroesToAdd) + answ
+        } else if (zeroesToAdd < 0) {
+            kotlin.error("$intVal is more than $bytesCount bytes!")
         }
         val charIterator = answ.iterator()
         return buildString {
@@ -36,37 +38,52 @@ object GuiUtils {
         }
     }
 
+    private val leadingZeroesRE = """^0+([^0]*\d)$""".toRegex()
+
     fun hexStringToInt(str: String?): Int? {
-        if (str == null) return null
-        val replacedStr = str.replace(" ", "").replace("""^0+""".toRegex(), "")
+        if (str.isNullOrEmpty()) return null
+        val replacedStr = str.replace(" ", "").replace(leadingZeroesRE, """\1""")
         return if (replacedStr.isEmpty()) 0
         else replacedStr.toIntOrNull(16)
     }
 
-    fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
-        val numberStringConverter: StringConverter<Number> = NumberStringConverter()
+    private fun<M> EventTarget.customFormattedTextField(
+        model: M,
+        propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
+        numberStringConverter: StringConverter<Number>,
+        op: (TextField.() -> Unit)?,
+    ): TextField {
         val viewModel = IntViewModel(model, propertyExtractor, numberStringConverter)
         return textfield(viewModel.stringProperty) {
-            filterInput { it.controlNewText.isInt() && !it.controlNewText.startsWith('0') }
-
             onKeyPressed = EventHandler { event ->
                 if (event.code == KeyCode.ESCAPE) {
                     viewModel.rollback()
                     parent.requestFocus()
                 }
             }
-            action {
-                parent.requestFocus()
-            } // On press any Enter key
+
+            action { parent.requestFocus() } // On press any Enter key
+
             focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
+
+            op?.invoke(this)
+        }
+    }
+
+    fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
+        val numberStringConverter: StringConverter<Number> = NumberStringConverter()
+        return customFormattedTextField(
+            model = model,
+            propertyExtractor = propertyExtractor,
+            numberStringConverter = numberStringConverter,
+        ) {
+            filterInput { it.controlNewText.isInt() && !it.controlNewText.startsWith('0') }
+
             validator { str ->
                 val intVal = str?.toIntOrNull()
                 if (intVal == null || intVal <= 0) {
                     error("Please enter the positive integer")
                 } else {
-                    if (str.startsWith('0')) {
-                        propertyExtractor(model).set(intVal)
-                    }
                     null
                 }
             }
@@ -77,16 +94,21 @@ object GuiUtils {
 
     fun EventTarget.memCellTextField(model: MemoryCell, op: (TextField.() -> Unit)? = null): TextField {
         val bytesCount = model.bytesCount
-        val numStringConverter = object : StringConverter<Number>() {
+        val numberStringConverter = object : StringConverter<Number>() {
             override fun toString(number: Number?): String? = intToHexString(number?.toInt(), bytesCount)
             override fun fromString(string: String?): Number? = hexStringToInt(string)
         }
-        val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
-        return textfield(viewModel.stringProperty).apply {
+//        val viewModel = IntViewModel(model, MemoryCell::valueProperty, numStringConverter)
+        return customFormattedTextField(
+            model = model,
+            propertyExtractor = MemoryCell::valueProperty,
+            numberStringConverter = numberStringConverter,
+        ) {
             filterInput {
                 !it.text.isNullOrEmpty() ||
                         it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }
             }
+
             model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
                 if (it.newVal) {
                     style {
@@ -99,16 +121,6 @@ object GuiUtils {
                 }
             }
 
-            onKeyPressed = EventHandler { event ->
-                if (event.code == KeyCode.ESCAPE) {
-                    viewModel.rollback()
-                    parent.requestFocus()
-                }
-            }
-            action {
-                parent.requestFocus()
-            } // On press any Enter key
-            focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
             validator { str ->
                 if (hexStringToInt(str) == null) {
                     error("Please enter the correct HEX number")
@@ -125,7 +137,7 @@ object GuiUtils {
 private open class IntViewModel<M>(
     model: M,
     propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
-    numberStringConverter: StringConverter<Number>
+    private val numberStringConverter: StringConverter<Number>
 ) : ItemViewModel<M>(model) {
     val intProperty = bind(propertyExtractor) // We must use this binding for rollback to work
 
