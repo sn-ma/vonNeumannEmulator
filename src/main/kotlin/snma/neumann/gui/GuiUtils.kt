@@ -3,7 +3,6 @@ package snma.neumann.gui
 import com.github.thomasnield.rxkotlinfx.toObservableChanges
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventHandler
 import javafx.event.EventTarget
 import javafx.scene.control.TextField
@@ -14,7 +13,6 @@ import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
 import snma.neumann.model.MemoryCell
 import tornadofx.*
-import java.text.NumberFormat
 import kotlin.reflect.KProperty1
 
 object GuiUtils {
@@ -48,7 +46,8 @@ object GuiUtils {
         str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toIntOrNull(16)
 
     fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
-        val viewModel = IntViewModel(model, propertyExtractor)
+        val numberStringConverter: StringConverter<Number> = NumberStringConverter()
+        val viewModel = IntViewModel(model, propertyExtractor, numberStringConverter)
         return textfield(viewModel.stringProperty) {
             filterInput { it.controlNewText.isInt() && !it.controlNewText.startsWith('0') }
 
@@ -58,13 +57,18 @@ object GuiUtils {
                     parent.requestFocus()
                 }
             }
-            action { parent.requestFocus() } // On press any Enter key
+            action {
+                parent.requestFocus()
+            } // On press any Enter key
             focusedProperty().addListener(ChangeListener { _, _, focused -> if(!focused) viewModel.commit() })
             validator { str ->
                 val intVal = str?.toIntOrNull()
                 if (intVal == null || intVal <= 0) {
                     error("Please enter the positive integer")
                 } else {
+                    if (str.startsWith('0')) {
+                        propertyExtractor(model).set(intVal)
+                    }
                     null
                 }
             }
@@ -120,10 +124,11 @@ object GuiUtils {
 private open class IntViewModel<M>(
     model: M,
     propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
-    numberStringConverter: StringConverter<Number> = NumberStringConverter() // FIXME number format?
+    numberStringConverter: StringConverter<Number>
 ) : ItemViewModel<M>(model) {
-    val stringProperty by lazy {
-        val intProperty = propertyExtractor(model)
+    val intProperty = bind(propertyExtractor) // We must use this binding for rollback to work
+
+    val stringProperty by lazy { // but this binding is obvious for value transformation
         BindingAwareSimpleStringProperty(this, intProperty.name).also { sp ->
             Bindings.bindBidirectional(sp, intProperty, numberStringConverter)
         }
