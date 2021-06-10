@@ -20,29 +20,33 @@ object GuiUtils {
     }, initialValue, CustomTextFilter { it.controlNewText.isInt() })
 
     private fun createMemCellTextFormatter(initialValue: Int, bytesCount: Int) = TextFormatter(object: StringConverter<Int>() {
-        override fun toString(int: Int?): String? {
-            int ?: return null
-            var answ = int.toString(16).uppercase()
-            val zeroesToAdd = 2 * bytesCount - answ.length
-            if (zeroesToAdd > 0) {
-                answ = "0".repeat(zeroesToAdd) + answ
-            }
-            val charIterator = answ.iterator()
-            return buildString {
-                while (true) {
-                    append(charIterator.nextChar())
-                    append(charIterator.nextChar())
-                    if (!charIterator.hasNext()) {
-                        break
-                    } else {
-                        append(' ')
-                    }
+        override fun toString(int: Int?): String? = intToHexString(int, bytesCount)
+        override fun fromString(str: String?) = hexStringToInt(str)
+    }, initialValue, CustomTextFilter { it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }})
+
+    private fun intToHexString(intVal: Int?, bytesCount: Int): String? {
+        if (intVal == null) return null
+        var answ = intVal.toString(16).uppercase()
+        val zeroesToAdd = 2 * bytesCount - answ.length
+        if (zeroesToAdd > 0) {
+            answ = "0".repeat(zeroesToAdd) + answ
+        }
+        val charIterator = answ.iterator()
+        return buildString {
+            while (true) {
+                append(charIterator.nextChar())
+                append(charIterator.nextChar())
+                if (!charIterator.hasNext()) {
+                    break
+                } else {
+                    append(' ')
                 }
             }
         }
-        override fun fromString(str: String?) =
-            str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toInt(16)
-    }, initialValue, CustomTextFilter { it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }})
+    }
+
+    fun hexStringToInt(str: String?): Int? =
+        str?.replace(" ", "")?.replace("""^0+""".toRegex(), "")?.toInt(16)
 
     fun<M> EventTarget.positiveIntTextField(model: M, propertyExtractor: KProperty1<M, SimpleIntegerProperty>, op: (TextField.() -> Unit)?): TextField {
         val viewModel = IntViewModel(model, propertyExtractor)
