@@ -136,7 +136,7 @@ object GuiUtils {
         }
     }
 
-    private open class IntViewModel<M>(
+    private class IntViewModel<M>(
         model: M,
         propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
         private val numberStringConverter: StringConverter<Number>
