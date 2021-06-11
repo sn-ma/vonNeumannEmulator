@@ -3,7 +3,7 @@ package snma.neumann.model
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class TestMemoryCellModel {
+class TestMemoryCellModel {
     @Test
     fun bitmask() {
         val mc = MemoryCellModel(3)
