@@ -11,43 +11,12 @@ import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
+import snma.neumann.CommonUtils
 import snma.neumann.model.MemoryCellModel
 import tornadofx.*
 import kotlin.reflect.KProperty1
 
 object GuiUtils {
-    private fun intToHexString(intVal: Int?, bytesCount: Int): String? {
-        if (intVal == null) return null
-        var answ = intVal.toString(16).uppercase()
-        val zeroesToAdd = 2 * bytesCount - answ.length
-        if (zeroesToAdd > 0) {
-            answ = "0".repeat(zeroesToAdd) + answ
-        } else if (zeroesToAdd < 0) {
-            kotlin.error("$intVal is more than $bytesCount bytes!")
-        }
-        val charIterator = answ.iterator()
-        return buildString {
-            while (true) {
-                append(charIterator.nextChar())
-                append(charIterator.nextChar())
-                if (!charIterator.hasNext()) {
-                    break
-                } else {
-                    append(' ')
-                }
-            }
-        }
-    }
-
-    private val leadingZeroesRE = """^0+([^0]*\d)$""".toRegex()
-
-    fun hexStringToInt(str: String?): Int? {
-        if (str.isNullOrEmpty()) return null
-        val replacedStr = str.replace(" ", "").replace(leadingZeroesRE, """\1""")
-        return if (replacedStr.isEmpty()) 0
-        else replacedStr.toIntOrNull(16)
-    }
-
     private fun<M> EventTarget.customFormattedTextField(
         model: M,
         propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
@@ -99,8 +68,8 @@ object GuiUtils {
     fun EventTarget.memCellTextField(model: MemoryCellModel, op: (TextField.() -> Unit)? = null): TextField {
         val bytesCount = model.bytesCount
         val numberStringConverter = object : StringConverter<Number>() {
-            override fun toString(number: Number?): String? = intToHexString(number?.toInt(), bytesCount)
-            override fun fromString(string: String?): Number? = hexStringToInt(string)
+            override fun toString(number: Number?): String? = CommonUtils.intToHexString(number?.toInt(), bytesCount)
+            override fun fromString(string: String?): Number? = CommonUtils.hexStringToInt(string)
         }
         return customFormattedTextField(
             model = model,
@@ -124,7 +93,7 @@ object GuiUtils {
             }
 
             validator { str ->
-                if (hexStringToInt(str) == null) {
+                if (CommonUtils.hexStringToInt(str) == null) {
                     error("Please enter the correct HEX number")
                 } else {
                     null

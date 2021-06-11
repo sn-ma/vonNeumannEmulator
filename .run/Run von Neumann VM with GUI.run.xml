@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run von Neumann VM with GUI" type="JetRunConfigurationType">
+    <option name="MAIN_CLASS_NAME" value="snma.neumann.gui.MainKt" />
+    <module name="neumann" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

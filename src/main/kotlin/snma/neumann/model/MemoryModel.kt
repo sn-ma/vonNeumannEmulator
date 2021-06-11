@@ -1,6 +1,6 @@
 package snma.neumann.model
 
-import snma.neumann.BinaryUtils.countValuableBits
+import snma.neumann.CommonUtils.countValuableBits
 
 
 class MemoryModel (
