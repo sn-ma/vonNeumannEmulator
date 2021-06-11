@@ -114,13 +114,12 @@ object GuiUtils {
 
             model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
                 if (it.newVal) {
+                    check(style == "") { "Style of non-changed memory cell isn't empty! Probably, styling logic has changed" }
                     style {
                         backgroundColor += Color.DARKORANGE
                     }
                 } else {
-                    style {
-                        backgroundColor.elements.remove(Color.DARKORANGE) // TODO fix -- see output
-                    }
+                    style = ""
                 }
             }
 
