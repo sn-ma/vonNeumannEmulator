@@ -114,7 +114,6 @@
             </exclusions>
         </dependency>
 
-
         <dependency>
             <groupId>org.jfxtras</groupId>
             <artifactId>jmetro</artifactId>
