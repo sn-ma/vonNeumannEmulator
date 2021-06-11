@@ -1,19 +1,21 @@
 package snma.neumann.model
 
 import snma.neumann.CommonUtils.countValuableBits
+import snma.neumann.Constants
 
 
 class MemoryModel (
     busModel: BusModel,
     val addressRange: IntRange,
 ) : HardwareItem(busModel) {
-    override val memoryCells = addressRange.map { MemoryCellModel(Constants.BITS_IN_NORMAL_MEM_CELL) }
+    override val memoryCells = addressRange.map { MemoryCellModel(type = MemoryCellModel.Type.DATA_CELL) }
 
     init {
-        check(addressRange.first.countValuableBits() <= Constants.BITS_IN_ADDRESS_MEM_CELL
-                && addressRange.last.countValuableBits() <= Constants.BITS_IN_ADDRESS_MEM_CELL) {
+        check(addressRange.first.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL
+                && addressRange.last.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL) {
             "Possible addresses has to much bits"
         }
+        check(addressRange.step == 1)
     }
 
     fun memoryCellByAddress(address: Int): MemoryCellModel {

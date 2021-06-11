@@ -10,7 +10,7 @@ object CommonUtils {
         if (zeroesToAdd > 0) {
             answ = "0".repeat(zeroesToAdd) + answ
         } else if (zeroesToAdd < 0) {
-            error("$intVal is more than $bytesCount bytes!")
+            error("$intVal is more than $bytesCount byte(s)!")
         }
         val charIterator = answ.iterator()
         return buildString {

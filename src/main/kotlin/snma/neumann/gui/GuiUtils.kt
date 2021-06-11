@@ -9,6 +9,7 @@ import javafx.event.EventTarget
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
+import javafx.scene.text.Font
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
 import snma.neumann.CommonUtils
@@ -66,7 +67,7 @@ object GuiUtils {
     }
 
     fun EventTarget.memCellTextField(model: MemoryCellModel, op: (TextField.() -> Unit)? = null): TextField {
-        val bytesCount = model.bytesCount
+        val bytesCount = model.type.bytesCount
         val numberStringConverter = object : StringConverter<Number>() {
             override fun toString(number: Number?): String? = CommonUtils.intToHexString(number?.toInt(), bytesCount)
             override fun fromString(string: String?): Number? = CommonUtils.hexStringToInt(string)
@@ -76,6 +77,10 @@ object GuiUtils {
             propertyExtractor = MemoryCellModel::valueProperty,
             numberStringConverter = numberStringConverter,
         ) {
+            prefWidth = bytesCount * 20.0 + 30.0
+            minWidth = prefWidth
+            maxWidth = prefWidth
+
             filterInput {
                 !it.text.isNullOrEmpty() ||
                         it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }
@@ -123,5 +128,12 @@ object GuiUtils {
                 Platform.runLater { stringProperty.value = formattedStringValue }
             }
         }
+    }
+
+    fun EventTarget.hardwareItemTitle(title: String, subtitle: String = "") = textflow {
+        text(title) {
+            font = Font("System bold", 20.0)
+        }
+        text("\n" + subtitle)
     }
 }

@@ -6,6 +6,7 @@ import javafx.stage.Stage
 import jfxtras.styles.jmetro.JMetro
 import jfxtras.styles.jmetro.JMetroStyleClass
 import jfxtras.styles.jmetro.Style
+import snma.neumann.Constants
 import tornadofx.*
 
 
@@ -23,7 +24,12 @@ class MyRootView: View() {
 
 class SimulationView: View() {
     override val root = hbox {
-        add(CpuView((app as MyApp).appStateModel.simulation.cpuModel))
+        spacing = 20.0
+        paddingAll = 10.0
+
+        val simulation = (app as MyApp).appStateModel.simulation
+        add(CpuView(simulation.cpuModel))
+        add(MemoryView(simulation.memoryModel, Constants.View.MEMORY_CELLS_PER_ROW))
     }
 }
 

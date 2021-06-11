@@ -11,21 +11,21 @@ class CpuModel (
     enum class RegisterDescription(
         val regName: String? = null,
         val isInternal: Boolean = false,
-        val bitsCount: Int = Constants.BITS_IN_NORMAL_MEM_CELL,
+        val type: MemoryCellModel.Type = MemoryCellModel.Type.DATA_CELL,
     ) {
         R0, R1, R2, R3, R4, R5, R6, R7, R8,
 
-        R_STACK_POINTER(regName = "Stack Pointer", bitsCount = Constants.BITS_IN_ADDRESS_MEM_CELL),
-        R_PROGRAM_COUNTER(regName = "Program Counter", bitsCount = Constants.BITS_IN_ADDRESS_MEM_CELL),
-        R_FLAGS(regName = "Flags", bitsCount = Constants.BITS_IN_FLAGS_MEM_CELL),
+        R_STACK_POINTER(regName = "Stack Pointer", type = MemoryCellModel.Type.ADDRESS_CELL),
+        R_PROGRAM_COUNTER(regName = "Program Counter", type = MemoryCellModel.Type.ADDRESS_CELL),
+        R_FLAGS(regName = "Flags", type = MemoryCellModel.Type.FLAGS_CELL),
 
         R_A(regName = "A", isInternal = true),
         R_B(regName = "B", isInternal = true),
         R_CMD(regName = "Command", isInternal = true),
-        R_ADDRESS(regName = "Address Buffer", isInternal = true, bitsCount = Constants.BITS_IN_ADDRESS_MEM_CELL),
+        R_ADDRESS(regName = "Address Buffer", isInternal = true, type = MemoryCellModel.Type.ADDRESS_CELL),
     }
 
-    val registers = RegisterDescription.values().associateWith { MemoryCellModel(it.bitsCount) }
+    val registers = RegisterDescription.values().associateWith { MemoryCellModel(it.type) }
 
     override val memoryCells = registers.values
 

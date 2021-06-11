@@ -6,7 +6,8 @@ import kotlin.test.assertEquals
 class TestMemoryCellModel {
     @Test
     fun bitmask() {
-        val mc = MemoryCellModel(3)
+        check(MemoryCellModel.Type.FLAGS_CELL.bitsCount == 3) { "Test's expectations wasn't satisfied" }
+        val mc = MemoryCellModel(type = MemoryCellModel.Type.FLAGS_CELL)
         for (value in listOf(0, 0b001, 0b111)) {
             mc.value = value
             assertEquals(value, mc.value)

@@ -5,8 +5,8 @@ import tornadofx.getValue
 import tornadofx.setValue
 
 class BusModel {
-    val addressBus = MemoryCellModel(Constants.BITS_IN_ADDRESS_MEM_CELL)
-    val dataBus = MemoryCellModel(Constants.BITS_IN_NORMAL_MEM_CELL)
+    val addressBus = MemoryCellModel(MemoryCellModel.Type.ADDRESS_CELL)
+    val dataBus = MemoryCellModel(MemoryCellModel.Type.DATA_CELL)
 
     val modeBusProperty = SimpleObjectProperty(Mode.IDLE)
     var modeBusValue: Mode by modeBusProperty
