@@ -3,7 +3,9 @@ package snma.neumann.model
 import java.util.*
 import kotlin.random.Random
 
-class CpuModel: HardwareItem {
+class CpuModel (
+    busModel: BusModel,
+) : HardwareItem(busModel) {
     private val actionsQueue: Deque<CpuAction> = LinkedList()
 
     enum class RegisterDescription(
@@ -23,12 +25,12 @@ class CpuModel: HardwareItem {
         R_ADDRESS(regName = "Address Buffer", isInternal = true, bitsCount = Constants.BITS_IN_ADDRESS_MEM_CELL),
     }
 
-    val registers = RegisterDescription.values().associateWith { MemoryCell(it.bitsCount) }
+    val registers = RegisterDescription.values().associateWith { MemoryCellModel(it.bitsCount) }
 
     override val memoryCells = registers.values
 
     override fun tick() {
-        registers[RegisterDescription.R0]!!.value = registers[RegisterDescription.R0]!!.value.inv() // FIXME tmp
+        registers[RegisterDescription.R0]!!.value = registers[RegisterDescription.R0]!!.value.inv()
         if (Random.Default.nextInt(3) == 0) {
             registers[RegisterDescription.R_ADDRESS]!!.value += 1
         }
@@ -67,9 +69,19 @@ private enum class SimpleAction: CpuAction {
     READ_REG_ADDRESS_HIGH_FROM_DATA_BUS,
 
     /**
-     * Reg Address := RegAddress & 0xFF00 + Data Bus
+     * Reg Address := Data Bus & 0xFF00 + Data Bus
      */
     READ_REG_ADDRESS_LOW_FROM_DATA_BUS,
+
+    /**
+     * Reg A := Data Bus
+     */
+    READ_REG_A_FROM_DATA_BUS,
+
+    /**
+     * Reg B := Data Bus
+     */
+    READ_REG_B_FROM_DATA_BUS,
 
     /**
      * Decide what to do after the command byte read
@@ -77,12 +89,14 @@ private enum class SimpleAction: CpuAction {
     DECIDE_AFTER_READING_COMMAND,
 
     /**
-     * Decide how to read the **first** argument after first byte already read
+     * Decide how to read the **first** argument after first byte already read.
+     * Set it, if enough information is provided in the first byte.
      */
     DECIDE_CONTINUE_READ_ARG_A,
 
     /**
-     * Decide how to read the **second** argument after first byte already read
+     * Decide how to read the **second** argument after first byte already read.
+     * Set it, if enough information is provided in the first byte.
      */
     DECIDE_CONTINUE_READ_ARG_B,
 }

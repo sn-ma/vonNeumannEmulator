@@ -1,9 +1,14 @@
 package snma.neumann.model
 
 class Simulation {
-    val cpuModel = CpuModel()
+    val busModel = BusModel()
 
-    val allHardware: List<HardwareItem> = listOf(cpuModel) // CPU should be the first in this list
+    val cpuModel = CpuModel(busModel)
+
+    val allHardware: List<HardwareItem> = listOf(
+        cpuModel, // CPU should be the first in this list
+        MemoryModel(busModel, 0..256)
+    )
 
     fun tick() {
         allHardware

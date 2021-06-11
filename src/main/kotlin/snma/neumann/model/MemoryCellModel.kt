@@ -1,19 +1,14 @@
 package snma.neumann.model
 
-import com.github.thomasnield.rxkotlinfx.toBinding
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
-import javafx.application.Platform
-import javafx.beans.property.IntegerProperty
 import javafx.beans.property.ReadOnlyBooleanProperty
 import javafx.beans.property.ReadOnlyBooleanWrapper
 import javafx.beans.property.SimpleIntegerProperty
+import tornadofx.getValue
+import tornadofx.setValue
 import kotlin.math.ceil
 
-import tornadofx.*
 
-
-class MemoryCell(val bitsCount: Int) {
+class MemoryCellModel(val bitsCount: Int) {
     val bytesCount: Int
         get() = ceil(bitsCount / 8.0).toInt()
 
@@ -22,7 +17,7 @@ class MemoryCell(val bitsCount: Int) {
     val valueProperty = object : SimpleIntegerProperty(0) {
         override fun set(newValue: Int) {
             super.set(newValue and bitmask)
-            Platform.runLater { wasRecentlyModifiedPropertyRW.set(true) } // FIXME do we need this delay?
+            wasRecentlyModifiedPropertyRW.set(true)
         }
     }
     var value by valueProperty

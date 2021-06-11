@@ -1,7 +1,7 @@
 package snma.neumann.model
 
-interface HardwareItem {
-    fun tick()
+abstract class HardwareItem(val busModel: BusModel) {
+    abstract fun tick()
 
-    val memoryCells: Iterable<MemoryCell>
+    abstract val memoryCells: Iterable<MemoryCellModel>
 }

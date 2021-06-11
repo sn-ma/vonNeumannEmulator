@@ -11,7 +11,7 @@ import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
-import snma.neumann.model.MemoryCell
+import snma.neumann.model.MemoryCellModel
 import tornadofx.*
 import kotlin.reflect.KProperty1
 
@@ -96,7 +96,7 @@ object GuiUtils {
         }
     }
 
-    fun EventTarget.memCellTextField(model: MemoryCell, op: (TextField.() -> Unit)? = null): TextField {
+    fun EventTarget.memCellTextField(model: MemoryCellModel, op: (TextField.() -> Unit)? = null): TextField {
         val bytesCount = model.bytesCount
         val numberStringConverter = object : StringConverter<Number>() {
             override fun toString(number: Number?): String? = intToHexString(number?.toInt(), bytesCount)
@@ -104,7 +104,7 @@ object GuiUtils {
         }
         return customFormattedTextField(
             model = model,
-            propertyExtractor = MemoryCell::valueProperty,
+            propertyExtractor = MemoryCellModel::valueProperty,
             numberStringConverter = numberStringConverter,
         ) {
             filterInput {
@@ -119,7 +119,7 @@ object GuiUtils {
                     }
                 } else {
                     style {
-                        backgroundColor.elements.remove(Color.DARKORANGE) // FIXME see output
+                        backgroundColor.elements.remove(Color.DARKORANGE) // TODO fix -- see output
                     }
                 }
             }
