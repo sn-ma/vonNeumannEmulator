@@ -36,7 +36,7 @@ class TestMemoryModel {
         busModel.apply {
             addressBus.value = address
             dataBus.value = 0
-            modeBusValue = BusModel.Mode.READ
+            modeBus.value = BusModel.Mode.READ
         }
 
         assertNotEquals(data, busModel.dataBus.value)
@@ -56,7 +56,7 @@ class TestMemoryModel {
         busModel.apply {
             addressBus.value = address
             dataBus.value = data
-            modeBusValue = BusModel.Mode.WRITE
+            modeBus.value = BusModel.Mode.WRITE
         }
 
         assertNotEquals(data, memoryModel.memoryCellByAddress(address).value)
@@ -77,7 +77,7 @@ class TestMemoryModel {
         busModel.apply {
             addressBus.value = address
             dataBus.value = busData
-            modeBusValue = BusModel.Mode.IDLE
+            modeBus.value = BusModel.Mode.IDLE
         }
 
         memoryModel.tick()

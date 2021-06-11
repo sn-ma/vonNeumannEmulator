@@ -11,6 +11,7 @@ class Simulation {
     )
 
     fun tick() {
+        busModel.cleanCellsWasRecentlyModified()
         allHardware
             .asSequence()
             .flatMap { it.memoryCells }

@@ -28,7 +28,7 @@ class MemoryModel (
         if (currentAddress !in addressRange) {
             return
         }
-        when (busModel.modeBusValue) {
+        when (busModel.modeBus.value) {
             BusModel.Mode.READ -> busModel.dataBus.value = memoryCellByAddress(currentAddress).value
             BusModel.Mode.WRITE -> memoryCellByAddress(currentAddress).value = busModel.dataBus.value
             BusModel.Mode.IDLE -> { /* do nothing */}

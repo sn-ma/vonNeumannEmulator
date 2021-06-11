@@ -1,9 +1,14 @@
 package snma.neumann.model
 
-enum class CommandCode(val meaning: String, val argsCount: Int, val comment: String? = null) {
+enum class CommandCode(
+    val meaning: String,
+    val argsCount: Int,
+    val comment: String? = null,
+    val secondArgumentReadOnlyAddress: Boolean = false,
+) {
     HLT("Halt", 0, "Stop and do nothing"),
     DLY("Delay", 1, "Wait A ticks"),
-    MOV("Move", 2, "B := A"),
+    MOV("Move", 2, "B := A", true),
 
     ADD("Add", 2, "B := B + A"),
     SUB("Subtract", 2, "B := B - A"),
@@ -20,4 +25,26 @@ enum class CommandCode(val meaning: String, val argsCount: Int, val comment: Str
 
     JSR("Jump to subroutine", 1),
     RET("Return from subroutine", 0),
+    ;
+
+    val intCode: Int
+        get() = ordinal
+
+    init {
+        if (secondArgumentReadOnlyAddress) {
+            check(argsCount == 2) { "This command should have two arguments" }
+        }
+        check(argsCount <= 2) { "Unexpectedly too much arguments count" }
+    }
+
+    companion object {
+        fun getByIntCode(ordinal: Int): CommandCode? {
+            val values = values()
+            return if (ordinal < values.size) {
+                values[ordinal]
+            } else {
+                null
+            }
+        }
+    }
 }

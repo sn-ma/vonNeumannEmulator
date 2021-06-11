@@ -1,15 +1,15 @@
 package snma.neumann.model
 
-import javafx.beans.property.SimpleObjectProperty
-import tornadofx.getValue
-import tornadofx.setValue
-
 class BusModel {
     val addressBus = MemoryCellModel(MemoryCellModel.Type.ADDRESS_CELL)
     val dataBus = MemoryCellModel(MemoryCellModel.Type.DATA_CELL)
+    val modeBus = EnumCellModel(Mode.IDLE)
 
-    val modeBusProperty = SimpleObjectProperty(Mode.IDLE)
-    var modeBusValue: Mode by modeBusProperty
+    fun cleanCellsWasRecentlyModified() {
+        addressBus.cleanWasRecentlyModified()
+        dataBus.cleanWasRecentlyModified()
+        modeBus.cleanWasRecentlyModified()
+    }
 
     enum class Mode {
         READ, WRITE, IDLE

@@ -6,6 +6,7 @@ import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventHandler
 import javafx.event.EventTarget
+import javafx.scene.control.Control
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
@@ -13,6 +14,8 @@ import javafx.scene.text.Font
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
 import snma.neumann.CommonUtils
+import snma.neumann.model.AbstractCellModel
+import snma.neumann.model.EnumCellModel
 import snma.neumann.model.MemoryCellModel
 import tornadofx.*
 import kotlin.reflect.KProperty1
@@ -86,16 +89,8 @@ object GuiUtils {
                         it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }
             }
 
-            model.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
-                if (it.newVal) {
-                    check(style == "") { "Style of non-changed memory cell isn't empty! Probably, styling logic has changed" }
-                    style {
-                        backgroundColor += Color.DARKORANGE
-                    }
-                } else {
-                    style = ""
-                }
-            }
+            @Suppress("DEPRECATION")
+            addRecentlyModifiedStyling(model)
 
             validator { str ->
                 if (CommonUtils.hexStringToInt(str) == null) {
@@ -127,6 +122,27 @@ object GuiUtils {
             if (stringProperty.value != formattedStringValue) {
                 Platform.runLater { stringProperty.value = formattedStringValue }
             }
+        }
+    }
+
+    @Deprecated("Not supposed to be used from outside of the class, but should be made public")
+    fun Control.addRecentlyModifiedStyling(cellModel: AbstractCellModel) {
+        cellModel.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
+            if (it.newVal) {
+                check(style == "") { "Style of non-changed memory cell isn't empty! Probably, styling logic has changed" }
+                style {
+                    backgroundColor += Color.DARKORANGE
+                }
+            } else {
+                style = ""
+            }
+        }
+    }
+
+    inline fun <reified T: Enum<*>> EventTarget.enumCellView(enumCellModel: EnumCellModel<T>): Control {
+        return combobox(enumCellModel.valueProperty, enumValues<T>().toList()) {
+            @Suppress("DEPRECATION")
+            addRecentlyModifiedStyling(enumCellModel)
         }
     }
 

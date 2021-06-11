@@ -28,6 +28,7 @@ class SimulationView: View() {
         paddingAll = 10.0
 
         val simulation = (app as MyApp).appStateModel.simulation
+        add(BusView(simulation.busModel))
         add(CpuView(simulation.cpuModel))
         add(MemoryView(simulation.memoryModel, Constants.View.MEMORY_CELLS_PER_ROW))
     }
