@@ -84,7 +84,9 @@ class CpuModel (
                         return
                     }
                     actionsQueue.addFirst(CommandExecution(commandCode))
-                    actionsQueue.addFirst(SimpleAction.INC_REG_A)
+                    if (commandCode == CommandCode.DLY) {
+                        actionsQueue.addFirst(SimpleAction.INC_REG_A)
+                    }
                     actionsQueue.addFirst(SimpleAction.CLEAN_BUS_MODE)
                     when (commandCode.argsCount) {
                         0 -> {}
@@ -111,14 +113,14 @@ class CpuModel (
                 }
                 SimpleAction.DECIDE_CONTINUE_READ_ARG_A -> {
                     val addressFirstByte = busModel.dataBus.value
-                    when (val addressingMode = AddressingMode.getByFirstByte(addressFirstByte)) {
-                        is AddressingMode.Companion.CONSTANT -> {
+                    when (AddressingMode.getByFirstByte(addressFirstByte)) {
+                        AddressingMode.CONSTANT -> {
                             actionsQueue.addFirst(SimpleAction.READ_REG_A_FROM_DATA_BUS)
                             actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                         }
-                        is AddressingMode.Companion.REGISTER -> {
+                        AddressingMode.REGISTER -> {
                             val registerValue =
-                                addressingMode.getRegisterByFirstByte(this@CpuModel, addressFirstByte)
+                                AddressingMode.getRegisterByFirstByte(this@CpuModel, addressFirstByte)
                             if (registerValue == null) {
                                 logger.error("Wrong register address in the command: {}", registerValue)
                                 // TODO: Show error in GUI
@@ -126,11 +128,11 @@ class CpuModel (
                             }
                             registers[RegisterDescription.R_A]!!.value = registerValue.value
                         }
-                        is AddressingMode.Companion.DIRECT -> {
-                            TODO(AddressingMode.Companion.DIRECT.toString())
+                        AddressingMode.DIRECT -> {
+                            TODO(AddressingMode.DIRECT.toString())
                         }
-                        is AddressingMode.Companion.INDIRECT -> {
-                            TODO(AddressingMode.Companion.INDIRECT.toString())
+                        AddressingMode.INDIRECT -> {
+                            TODO(AddressingMode.INDIRECT.toString())
                         }
                     }
                 }
