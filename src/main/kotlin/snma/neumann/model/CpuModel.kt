@@ -1,10 +1,13 @@
 package snma.neumann.model
 
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class CpuModel (
     busModel: BusModel,
 ) : HardwareItem(busModel) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     private val actionsQueue: Deque<CpuAction> = LinkedList<CpuAction>().apply { add(SimpleAction.START_READING_COMMAND) }
 
     enum class RegisterDescription(
@@ -36,11 +39,10 @@ class CpuModel (
     }
 
     override fun tick() {
-        // TODO: add normal logging framework
-        println("CPU tick started")
+        logger.info("Tick started")
         while (true) {
             val currAction = actionsQueue.pollFirst()
-            println("CPU: action $currAction, tick deque: $actionsQueue")
+            logger.info("Action {}, actions deque: {}", currAction, actionsQueue)
             when (currAction) {
                 null -> return
                 SimpleAction.START_READING_COMMAND -> {
@@ -64,7 +66,7 @@ class CpuModel (
                     val commandCode = CommandCode.getByIntCode(registers[RegisterDescription.R_CMD]!!.value)
                     if (commandCode == null) {
                         // TODO: report an error in GUI?
-                        println("Unrecognized command with code ${registers[RegisterDescription.R_CMD]!!.value}")
+                        logger.error("Unrecognized command with code ${registers[RegisterDescription.R_CMD]!!.value}")
                         return
                     }
                     actionsQueue.addFirst(CommandExecution(commandCode))

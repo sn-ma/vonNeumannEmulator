@@ -6,6 +6,7 @@ import javafx.stage.Stage
 import jfxtras.styles.jmetro.JMetro
 import jfxtras.styles.jmetro.JMetroStyleClass
 import jfxtras.styles.jmetro.Style
+import org.slf4j.bridge.SLF4JBridgeHandler
 import snma.neumann.Constants
 import tornadofx.*
 
@@ -54,5 +55,9 @@ class MyApp : App(MyRootView::class) {
 }
 
 fun main() {
+    // Set up logging bridge
+    SLF4JBridgeHandler.removeHandlersForRootLogger()
+    SLF4JBridgeHandler.install()
+
     launch<MyApp>()
 }
