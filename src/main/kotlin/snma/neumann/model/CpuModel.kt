@@ -17,9 +17,9 @@ class CpuModel (
     ) {
         R0, R1, R2, R3, R4, R5, R6, R7, R8,
 
-        R_STACK_POINTER(regName = "Stack Pointer", type = MemoryCellModel.Type.ADDRESS_CELL),
-        R_PROGRAM_COUNTER(regName = "Program Counter", type = MemoryCellModel.Type.ADDRESS_CELL),
-        R_FLAGS(regName = "Flags", type = MemoryCellModel.Type.FLAGS_CELL),
+        R_STACK_POINTER(regName = "Stack Pointer", isInternal = true, type = MemoryCellModel.Type.ADDRESS_CELL),
+        R_PROGRAM_COUNTER(regName = "Program Counter", isInternal = true, type = MemoryCellModel.Type.ADDRESS_CELL),
+        R_FLAGS(regName = "Flags", isInternal = true, type = MemoryCellModel.Type.FLAGS_CELL),
 
         R_A(regName = "A", isInternal = true),
         R_B(regName = "B", isInternal = true),
@@ -70,7 +70,6 @@ class CpuModel (
 
                     actionsQueue.addFirst(SimpleAction.TICK)
                 }
-                SimpleAction.MEM_READ_REQUEST_BY_REG_ADDRESS -> TODO()
                 SimpleAction.READ_CMD_FROM_DATA_BUS_AND_REQUEST_READING_ARGS -> {
                     registers[RegisterDescription.R_CMD]!!.value = busModel.dataBus.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
@@ -85,14 +84,18 @@ class CpuModel (
                     when (commandCode.argsCount) {
                         0 -> {}
                         1 -> {
-                            actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_A)
+                            when (commandCode.lastArgumentTypeIfAny) {
+                                CommandCode.LastArgumentType.REGULAR -> actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_A)
+                                CommandCode.LastArgumentType.ADDRESS_TO_WRITE_AT -> error("Unexpected command: $commandCode says it's only one argument should be treated as just an address to write at")
+                                CommandCode.LastArgumentType.ADDRESS_TO_JUMP_TO -> actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_A_AS_ADDRESS_TO_JUMP)
+                            }
                             actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                         }
                         2 -> {
-                            if (commandCode.shouldReadValueOfLastArgumentIfAny) {
-                                actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_B)
-                            } else {
-                                actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_B_ADDRESS_ONLY)
+                            when (commandCode.lastArgumentTypeIfAny) {
+                                CommandCode.LastArgumentType.REGULAR -> actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_B)
+                                CommandCode.LastArgumentType.ADDRESS_TO_WRITE_AT -> actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_B_ADDRESS_ONLY)
+                                CommandCode.LastArgumentType.ADDRESS_TO_JUMP_TO -> actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_B_AS_ADDRESS_TO_JUMP)
                             }
                             actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                             actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_A)
@@ -101,30 +104,11 @@ class CpuModel (
                         else -> error("Unexpected count of args in $commandCode")
                     }
                 }
-                SimpleAction.READ_REG_ADDRESS_HIGH_FROM_DATA_BUS -> TODO()
-                SimpleAction.READ_REG_ADDRESS_LOW_FROM_DATA_BUS -> TODO()
-                SimpleAction.READ_REG_A_FROM_DATA_BUS -> TODO()
-                SimpleAction.READ_REG_B_FROM_DATA_BUS -> TODO()
-                SimpleAction.DECIDE_CONTINUE_READ_ARG_A -> TODO()
-                SimpleAction.DECIDE_CONTINUE_READ_ARG_B -> TODO()
-                SimpleAction.CONTINUE_READ_ARG_B_ADDRESS_ONLY -> TODO()
                 is CommandExecution -> when (currAction.commandCode) {
                     CommandCode.HLT -> return
-                    CommandCode.DLY -> TODO()
-                    CommandCode.MOV -> TODO()
-                    CommandCode.ADD -> TODO()
-                    CommandCode.SUB -> TODO()
-                    CommandCode.BAND -> TODO()
-                    CommandCode.BOR -> TODO()
-                    CommandCode.CMP -> TODO()
-                    CommandCode.JPM -> TODO()
-                    CommandCode.JEQ -> TODO()
-                    CommandCode.JNE -> TODO()
-                    CommandCode.JGT -> TODO()
-                    CommandCode.JLW -> TODO()
-                    CommandCode.JSR -> TODO()
-                    CommandCode.RET -> TODO()
+                    else -> TODO("Command ${currAction.commandCode} is not yet implemented")
                 }
+                else -> TODO("$currAction is not yet implemented")
             }
         }
     }
@@ -198,6 +182,16 @@ private enum class SimpleAction: CpuAction {
      * Continue reading address of argument B
      */
     CONTINUE_READ_ARG_B_ADDRESS_ONLY,
+
+    /**
+     * Continue reading address of argument B
+     */
+    CONTINUE_READ_ARG_A_AS_ADDRESS_TO_JUMP,
+
+    /**
+     * Continue reading address of argument B
+     */
+    CONTINUE_READ_ARG_B_AS_ADDRESS_TO_JUMP,
 }
 
 private data class CommandExecution(val commandCode: CommandCode) : CpuAction
