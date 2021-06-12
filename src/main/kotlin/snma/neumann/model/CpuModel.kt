@@ -29,6 +29,18 @@ class CpuModel (
 
     val registers = RegisterDescription.values().associateWith { MemoryCellModel(it.type) }
 
+    fun getOpenRegisterByIndex(index: Int): MemoryCellModel? {
+        val allDescriptions = RegisterDescription.values()
+        if (index !in allDescriptions.indices) {
+            return null
+        }
+        val description = allDescriptions[index]
+        if (description.isInternal) {
+            return null
+        }
+        return registers[description]!!
+    }
+
     override val memoryCells = registers.values
 
     override fun reset() {

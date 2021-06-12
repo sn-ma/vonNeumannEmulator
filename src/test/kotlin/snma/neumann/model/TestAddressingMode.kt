@@ -7,14 +7,35 @@ class TestAddressingMode {
     @Test
     fun getByFirstByte() {
         listOf(
-            0b0010_1010 to AddressingMode.CONSTANT,
-            0b0101_0101 to AddressingMode.REGISTER,
-            0b1000_1111 to AddressingMode.DIRECT,
-            0b1111_0011 to AddressingMode.INDIRECT,
+            0b0010_1010 to AddressingMode.Companion.CONSTANT,
+            0b0101_0101 to AddressingMode.Companion.REGISTER,
+            0b1000_1111 to AddressingMode.Companion.DIRECT,
+            0b1111_0011 to AddressingMode.Companion.INDIRECT,
         ).forEach { (firstByte, expected) ->
             val actual = AddressingMode.getByFirstByte(firstByte)
             assertEquals(expected, actual,
-                "Byte 0b${firstByte.toString(2)} must map to $expected, but got $actual")
+                "Byte 0b${firstByte.toString(2)} mapped wrong")
+        }
+    }
+
+    @Test
+    fun `get value of the CONSTANT`() {
+        val firstByte = 0b0010_1010
+        val expected = 0b0010_1010
+        val actual = AddressingMode.Companion.CONSTANT.getConstantValue(firstByte)
+        assertEquals(expected, actual,
+            "CONSTANT.getConstantValue for 0b${firstByte.toString(2)} returned wrong value")
+    }
+
+    @Test
+    fun `get the corresponding register`() {
+        val firstByte = 0b0100_0101
+        val cpuModel = CpuModel(BusModel())
+        val expected = cpuModel.getOpenRegisterByIndex(5)
+        with (AddressingMode.Companion.REGISTER) {
+            val actual = cpuModel.getRegisterByFirstByte(firstByte)
+            assertEquals(expected, actual,
+                "getting REGISTER's value for 0b${firstByte.toString(2)} returned wrong value")
         }
     }
 }

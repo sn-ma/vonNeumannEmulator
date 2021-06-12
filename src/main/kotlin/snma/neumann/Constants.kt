@@ -4,7 +4,7 @@ object Constants {
     object Model {
         const val BITS_IN_NORMAL_MEM_CELL = 8
         const val BITS_IN_ADDRESS_FOR_ADDRESSING = 2
-        const val BITS_IN_ADDRESS_MEM_CELL = 14 - BITS_IN_ADDRESS_FOR_ADDRESSING
+        const val BITS_IN_ADDRESS_MEM_CELL = 2 * 8 - BITS_IN_ADDRESS_FOR_ADDRESSING
         const val BITS_IN_FLAGS_MEM_CELL = 3
     }
 
