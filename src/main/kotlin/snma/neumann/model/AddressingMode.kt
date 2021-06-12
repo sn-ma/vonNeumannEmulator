@@ -3,7 +3,7 @@ package snma.neumann.model
 import snma.neumann.CommonUtils.countValuableBits
 import snma.neumann.Constants
 
-sealed class AddressingMode(private val bitmask: Int) {
+sealed class AddressingMode(private val bitmask: Int) { // TODO make enum again
     init {
         check(bitmask.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_FOR_ADDRESSING) {
             "Too much addressing modes for given number of addressing bits"
@@ -11,11 +11,10 @@ sealed class AddressingMode(private val bitmask: Int) {
     }
 
     companion object {
-        object CONSTANT: AddressingMode(0b00) {
-            fun getConstantValue(firstByte: Int) = firstByte and dataBitmask
-        }
+        object CONSTANT: AddressingMode(0b00)
         object REGISTER: AddressingMode(0b01) {
-            fun CpuModel.getRegisterByFirstByte(firstByte: Int) = getOpenRegisterByIndex(firstByte and dataBitmask)
+            fun getRegisterByFirstByte(cpuModel: CpuModel, firstByte: Int) =
+                cpuModel.getOpenRegisterByIndex(firstByte and dataBitmask)
         }
         object DIRECT: AddressingMode(0b10)
         object INDIRECT: AddressingMode(0b11)

@@ -19,21 +19,12 @@ class TestAddressingMode {
     }
 
     @Test
-    fun `get value of the CONSTANT`() {
-        val firstByte = 0b0010_1010
-        val expected = 0b0010_1010
-        val actual = AddressingMode.Companion.CONSTANT.getConstantValue(firstByte)
-        assertEquals(expected, actual,
-            "CONSTANT.getConstantValue for 0b${firstByte.toString(2)} returned wrong value")
-    }
-
-    @Test
     fun `get the corresponding register`() {
         val firstByte = 0b0100_0101
         val cpuModel = CpuModel(BusModel())
         val expected = cpuModel.getOpenRegisterByIndex(5)
         with (AddressingMode.Companion.REGISTER) {
-            val actual = cpuModel.getRegisterByFirstByte(firstByte)
+            val actual = getRegisterByFirstByte(cpuModel, firstByte)
             assertEquals(expected, actual,
                 "getting REGISTER's value for 0b${firstByte.toString(2)} returned wrong value")
         }

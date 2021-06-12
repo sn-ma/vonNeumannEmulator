@@ -63,6 +63,9 @@ class CpuModel (
                     actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                 }
                 SimpleAction.TICK -> return
+                SimpleAction.CLEAN_BUS_MODE -> {
+                    busModel.modeBus.value = BusModel.Mode.IDLE
+                }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_PC -> {
                     busModel.addressBus.value = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value
                     busModel.modeBus.value = BusModel.Mode.READ
@@ -81,6 +84,8 @@ class CpuModel (
                         return
                     }
                     actionsQueue.addFirst(CommandExecution(commandCode))
+                    actionsQueue.addFirst(SimpleAction.INC_REG_A)
+                    actionsQueue.addFirst(SimpleAction.CLEAN_BUS_MODE)
                     when (commandCode.argsCount) {
                         0 -> {}
                         1 -> {
@@ -104,11 +109,49 @@ class CpuModel (
                         else -> error("Unexpected count of args in $commandCode")
                     }
                 }
+                SimpleAction.DECIDE_CONTINUE_READ_ARG_A -> {
+                    val addressFirstByte = busModel.dataBus.value
+                    when (val addressingMode = AddressingMode.getByFirstByte(addressFirstByte)) {
+                        is AddressingMode.Companion.CONSTANT -> {
+                            actionsQueue.addFirst(SimpleAction.READ_REG_A_FROM_DATA_BUS)
+                            actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
+                        }
+                        is AddressingMode.Companion.REGISTER -> {
+                            val registerValue =
+                                addressingMode.getRegisterByFirstByte(this@CpuModel, addressFirstByte)
+                            if (registerValue == null) {
+                                logger.error("Wrong register address in the command: {}", registerValue)
+                                // TODO: Show error in GUI
+                                return
+                            }
+                            registers[RegisterDescription.R_A]!!.value = registerValue.value
+                        }
+                        is AddressingMode.Companion.DIRECT -> {
+                            TODO(AddressingMode.Companion.DIRECT.toString())
+                        }
+                        is AddressingMode.Companion.INDIRECT -> {
+                            TODO(AddressingMode.Companion.INDIRECT.toString())
+                        }
+                    }
+                }
+                SimpleAction.READ_REG_A_FROM_DATA_BUS -> {
+                    registers[RegisterDescription.R_A]!!.value = busModel.dataBus.value
+                    busModel.modeBus.value = BusModel.Mode.IDLE
+                }
+                SimpleAction.INC_REG_A -> {
+                    registers[RegisterDescription.R_A]!!.value++
+                }
                 is CommandExecution -> when (currAction.commandCode) {
                     CommandCode.HLT -> return
+                    CommandCode.DLY -> {
+                        if (registers[RegisterDescription.R_A]!!.value-- != 0) {
+                            actionsQueue.addFirst(CommandExecution(CommandCode.DLY))
+                            actionsQueue.addFirst(SimpleAction.TICK)
+                        }
+                    }
                     else -> TODO("Command ${currAction.commandCode} is not yet implemented")
                 }
-                else -> TODO("$currAction is not yet implemented")
+                else -> TODO("Action $currAction is not yet implemented")
             }
         }
     }
@@ -126,6 +169,11 @@ private enum class SimpleAction: CpuAction {
      * Wait for the next tick
      */
     TICK,
+
+    /**
+     * Bus Mode := Idle
+     */
+    CLEAN_BUS_MODE,
 
     /**
      * Address Bus := PC, Mode := Read, PC++
@@ -156,6 +204,8 @@ private enum class SimpleAction: CpuAction {
 
     /**
      * Reg A := Data Bus
+     *
+     * Also clean Bus Mode
      */
     READ_REG_A_FROM_DATA_BUS,
 
@@ -192,6 +242,11 @@ private enum class SimpleAction: CpuAction {
      * Continue reading address of argument B
      */
     CONTINUE_READ_ARG_B_AS_ADDRESS_TO_JUMP,
+
+    /**
+     * Increase a value of Register A (specially for [CommandCode.DLY] command)
+     */
+    INC_REG_A,
 }
 
 private data class CommandExecution(val commandCode: CommandCode) : CpuAction
