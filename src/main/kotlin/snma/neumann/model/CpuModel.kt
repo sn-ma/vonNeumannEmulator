@@ -186,4 +186,4 @@ private enum class SimpleAction: CpuAction {
     CONTINUE_READ_ARG_B_ADDRESS_ONLY,
 }
 
-private class CommandExecution(val commandCode: CommandCode) : CpuAction
+private data class CommandExecution(val commandCode: CommandCode) : CpuAction
