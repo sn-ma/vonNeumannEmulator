@@ -4,11 +4,11 @@ enum class CommandCode(
     val meaning: String,
     val argsCount: Int,
     val comment: String? = null,
-    val secondArgumentReadOnlyAddress: Boolean = false,
+    val shouldReadValueOfLastArgument: Boolean = true,
 ) {
     HLT("Halt", 0, "Stop and do nothing"),
     DLY("Delay", 1, "Wait A ticks"),
-    MOV("Move", 2, "B := A", true),
+    MOV("Move", 2, "B := A", false),
 
     ADD("Add", 2, "B := B + A"),
     SUB("Subtract", 2, "B := B - A"),
@@ -31,8 +31,8 @@ enum class CommandCode(
         get() = ordinal
 
     init {
-        if (secondArgumentReadOnlyAddress) {
-            check(argsCount == 2) { "This command should have two arguments" }
+        if (shouldReadValueOfLastArgument) {
+            check(argsCount > 0) { "This command should have some arguments" }
         }
         check(argsCount <= 2) { "Unexpectedly too much arguments count" }
     }

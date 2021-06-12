@@ -77,10 +77,10 @@ class CpuModel (
                             actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                         }
                         2 -> {
-                            if (commandCode.secondArgumentReadOnlyAddress) {
-                                actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_B_ADDRESS_ONLY)
-                            } else {
+                            if (commandCode.shouldReadValueOfLastArgument) {
                                 actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_B)
+                            } else {
+                                actionsQueue.addFirst(SimpleAction.CONTINUE_READ_ARG_B_ADDRESS_ONLY)
                             }
                             actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                             actionsQueue.addFirst(SimpleAction.DECIDE_CONTINUE_READ_ARG_A)
