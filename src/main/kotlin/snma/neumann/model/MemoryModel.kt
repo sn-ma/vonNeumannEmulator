@@ -1,37 +1,22 @@
 package snma.neumann.model
 
-import snma.neumann.CommonUtils.countValuableBits
-import snma.neumann.Constants
-
 
 class MemoryModel (
     busModel: BusModel,
-    val addressRange: IntRange,
-) : HardwareItem(busModel) {
+    addressRange: IntRange,
+) : PeripheralHardwareItem(busModel, addressRange) {
     override val memoryCells = addressRange.map { MemoryCellModel(type = MemoryCellModel.Type.DATA_CELL) }
-
-    init {
-        check(addressRange.first.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL
-                && addressRange.last.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL) {
-            "Possible addresses has to much bits"
-        }
-        check(addressRange.step == 1)
-    }
 
     fun memoryCellByAddress(address: Int): MemoryCellModel {
         check(address in addressRange) { "Address $address is not in range $addressRange" }
         return memoryCells[address - addressRange.first]
     }
 
-    override fun tick() {
-        val currentAddress = busModel.addressBus.value
-        if (currentAddress !in addressRange) {
-            return
-        }
-        when (busModel.modeBus.value) {
-            BusModel.Mode.READ -> busModel.dataBus.value = memoryCellByAddress(currentAddress).value
-            BusModel.Mode.WRITE -> memoryCellByAddress(currentAddress).value = busModel.dataBus.value
-            BusModel.Mode.IDLE -> { /* do nothing */}
-        }
+    override fun read(address: Int): Int {
+        return memoryCellByAddress(address).value
+    }
+
+    override fun write(address: Int, value: Int) {
+        memoryCellByAddress(address).value = value
     }
 }

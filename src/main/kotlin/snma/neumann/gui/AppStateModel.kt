@@ -3,15 +3,14 @@ package snma.neumann.gui
 import com.github.thomasnield.rxkotlinfx.observeOnFx
 import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
-import javafx.beans.property.ReadOnlyBooleanProperty
-import javafx.beans.property.ReadOnlyBooleanWrapper
 import javafx.beans.property.SimpleBooleanProperty
-import tornadofx.*
 import javafx.beans.property.SimpleIntegerProperty
 import snma.neumann.Defaults
 import snma.neumann.model.Simulation
+import tornadofx.getValue
+import tornadofx.onChange
+import tornadofx.setValue
 import java.util.concurrent.TimeUnit
-import kotlin.contracts.contract
 
 class AppStateModel {
     val simulation = Simulation()
@@ -28,7 +27,7 @@ class AppStateModel {
 
     fun makeStep() {
         if (isRunning) {
-            kotlin.error("Trying to make step when already running")
+            error("Trying to make step when already running")
         }
         simulation.tick()
     }
@@ -53,5 +52,9 @@ class AppStateModel {
     fun restart() {
         stop()
         start()
+    }
+
+    fun reset() {
+        simulation.reset()
     }
 }

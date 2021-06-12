@@ -13,6 +13,12 @@ class AppMenu: View() {
 
         // TODO: add tooltips
 
+        button("Reset") {
+            enableWhen(appStateModel.isRunningProperty.not())
+            action { appStateModel.reset() }
+        }
+        spacer { minWidth = 10.0 }
+
         button("Step") {
             enableWhen(appStateModel.isRunningProperty.not())
             action { appStateModel.makeStep() }
@@ -23,7 +29,6 @@ class AppMenu: View() {
                 text = if (isRunningValue) "Stop" else "Run"
             }
         }
-//        button("Reset")
         spacer { minWidth = 10.0 }
 
         label("Tick: ")

@@ -11,6 +11,12 @@ class BusModel {
         modeBus.cleanWasRecentlyModified()
     }
 
+    fun reset() {
+        addressBus.value = 0
+        dataBus.value = 0
+        modeBus.value = Mode.IDLE
+    }
+
     enum class Mode {
         READ, WRITE, IDLE
     }

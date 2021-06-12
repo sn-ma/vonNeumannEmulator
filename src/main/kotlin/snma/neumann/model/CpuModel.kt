@@ -28,9 +28,20 @@ class CpuModel (
 
     override val memoryCells = registers.values
 
+    override fun reset() {
+        super.reset()
+
+        actionsQueue.clear()
+        actionsQueue.add(SimpleAction.START_READING_COMMAND)
+    }
+
     override fun tick() {
+        // TODO: add normal logging framework
+        println("CPU tick started")
         while (true) {
-            when (val currAction = actionsQueue.pollFirst()) {
+            val currAction = actionsQueue.pollFirst()
+            println("CPU: action $currAction, tick deque: $actionsQueue")
+            when (currAction) {
                 null -> return
                 SimpleAction.START_READING_COMMAND -> {
                     actionsQueue.addFirst(SimpleAction.START_READING_COMMAND)
@@ -43,8 +54,6 @@ class CpuModel (
                     busModel.modeBus.value = BusModel.Mode.READ
                     registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value += 1
 
-                    // Tick two times -- to finish this tick and to pass the next one
-                    actionsQueue.addFirst(SimpleAction.TICK)
                     actionsQueue.addFirst(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_ADDRESS -> TODO()
