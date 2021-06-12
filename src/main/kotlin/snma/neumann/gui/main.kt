@@ -38,7 +38,7 @@ class SimulationView: View() {
 class MyApp : App(MyRootView::class) {
     val appStateModel = AppStateModel()
 
-    override fun shouldShowPrimaryStage() = false // Hack to "fix" the bug
+    override fun shouldShowPrimaryStage() = false // Hack to "fix" the bug in JMetro
 
     override fun start(stage: Stage) {
         super.start(stage)
