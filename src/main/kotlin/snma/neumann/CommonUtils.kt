@@ -26,11 +26,14 @@ object CommonUtils {
         }
     }
 
-    private val leadingZeroesRE = """^0+([^0]*\d)$""".toRegex()
+    private val leadingZeroesRE = """^0+([^0]*[\dA-Z])$""".toRegex()
 
     fun hexStringToInt(str: String?): Int? {
         if (str.isNullOrEmpty()) return null
-        val replacedStr = str.replace(" ", "").replace(leadingZeroesRE, """\1""")
+        val replacedStr = str
+            .replace(" ", "")
+            .uppercase()
+            .replace(leadingZeroesRE, """$1""")
         return if (replacedStr.isEmpty()) 0
         else replacedStr.toIntOrNull(16)
     }

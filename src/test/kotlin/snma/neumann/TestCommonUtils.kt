@@ -57,10 +57,12 @@ class TestCommonUtils {
             "a b c d  " to 0xABCD,
             "abcd" to 0xABCD,
             "Q" to null,
+            "03" to 3,
+            "0F" to 0x0F,
         ).forEach { (stringValue, expected) ->
             val actual = hexStringToInt(stringValue)
             assertEquals(expected, actual,
-                "While converting '$stringValue' to int got $actual, but not $expected")
+                "Wrong conversion result for '$stringValue'")
         }
     }
 }
