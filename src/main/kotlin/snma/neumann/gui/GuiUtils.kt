@@ -139,7 +139,7 @@ object GuiUtils {
         }
     }
 
-    inline fun <reified T: Enum<*>> EventTarget.enumCellView(enumCellModel: EnumCellModel<T>): Control {
+    inline fun <reified T: Enum<T>> EventTarget.enumCellView(enumCellModel: EnumCellModel<T>): Control {
         return combobox(enumCellModel.valueProperty, enumValues<T>().toList()) {
             @Suppress("DEPRECATION")
             addRecentlyModifiedStyling(enumCellModel)

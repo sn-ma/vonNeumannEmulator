@@ -19,8 +19,8 @@ class MemoryCellModel(
     var value: Int by valueProperty
 
     enum class Type(val bitsCount: Int) {
-        DATA_CELL(Constants.Model.BITS_IN_NORMAL_MEM_CELL),
-        ADDRESS_CELL(Constants.Model.BITS_IN_ADDRESS_MEM_CELL),
+        DATA_CELL(Constants.Model.BITS_IN_NORMAL_CELL),
+        ADDRESS_CELL(Constants.Model.BITS_IN_NORMAL_CELL),
         FLAGS_CELL(Constants.Model.BITS_IN_FLAGS_MEM_CELL),
         ;
 

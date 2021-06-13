@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test
 import snma.neumann.CommonUtils.countValuableBits
 import snma.neumann.CommonUtils.hexStringToInt
 import snma.neumann.CommonUtils.intToHexString
+import snma.neumann.CommonUtils.pushFront
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
@@ -63,6 +65,19 @@ class TestCommonUtils {
             val actual = hexStringToInt(stringValue)
             assertEquals(expected, actual,
                 "Wrong conversion result for '$stringValue'")
+        }
+    }
+
+    @Test
+    fun `Deque pushFront`() {
+        listOf(
+            Triple(listOf(1, 2, 3), arrayOf(), listOf(1, 2, 3)),
+            Triple(listOf(1, 2, 3), arrayOf(0), listOf(0, 1, 2, 3)),
+            Triple(listOf(1, 2, 3), arrayOf(-2, -1, 0), listOf(-2, -1, 0, 1, 2, 3)),
+        ).forEach { (originalListData, addArray, expectedList) ->
+            val deque = LinkedList(originalListData)
+            deque.pushFront(*addArray)
+            assertEquals(expectedList, deque)
         }
     }
 }

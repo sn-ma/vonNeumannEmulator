@@ -1,5 +1,7 @@
 package snma.neumann
 
+import java.util.*
+
 object CommonUtils {
     fun Int.countValuableBits(): Int = if (this == 0) 0 else toString(2).length
 
@@ -36,5 +38,11 @@ object CommonUtils {
             .replace(leadingZeroesRE, """$1""")
         return if (replacedStr.isEmpty()) 0
         else replacedStr.toIntOrNull(16)
+    }
+
+    fun<T> LinkedList<T>.pushFront(vararg items: T) {
+        for (i in (items.size - 1) downTo 0) {
+            addFirst(items[i])
+        }
     }
 }

@@ -1,45 +1,59 @@
 package snma.neumann.model
 
+import snma.neumann.Constants
+
 enum class CommandCode(
     val meaning: String,
-    val argsCount: Int,
     val comment: String? = null,
-    val lastArgumentTypeIfAny: LastArgumentType = LastArgumentType.REGULAR,
+    val commandType: CommandType
 ) {
-    HLT("Halt", 0, "Stop and do nothing"),
-    DLY("Delay", 1, "Wait A ticks"),
-    MOV("Move", 2, "B := A", LastArgumentType.ADDRESS_TO_WRITE_AT),
+    HLT("Halt", "Stop and do nothing", CommandType.NO_ARGS),
+    DLY("Delay", "Wait A ticks", CommandType.READ_1_VALUE),
+    MOV("Move", "B := A", CommandType.READ_1_VALUE_AND_WRITE_TO_2ND),
 
-    ADD("Add", 2, "B := B + A"),
-    SUB("Subtract", 2, "B := B - A"),
+    ADD("Add", "B := B + A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
+    SUB("Subtract", "B := B - A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
 
-    BAND("Bitwise and", 2, "B := B & A"),
-    BOR("Bitwise or", 2, "B := B | A"),
+    BAND("Bitwise and", "B := B & A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
+    BOR("Bitwise or", "B := B | A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
 
-    CMP("Compare", 2, "Set control bits to 0 if A = B, to -1 if A < B and to 1 otherwise"),
-    JPM("Jump", 1, "Jump to address", LastArgumentType.ADDRESS_TO_JUMP_TO),
-    JEQ("Jump if equal", 1, lastArgumentTypeIfAny = LastArgumentType.ADDRESS_TO_JUMP_TO),
-    JNE("Jump if not equal", 1, lastArgumentTypeIfAny = LastArgumentType.ADDRESS_TO_JUMP_TO),
-    JGT("Jump if greater", 1, lastArgumentTypeIfAny = LastArgumentType.ADDRESS_TO_JUMP_TO),
-    JLW("Jump if lower", 1, lastArgumentTypeIfAny = LastArgumentType.ADDRESS_TO_JUMP_TO),
+    CMP("Compare",
+        "Set control bits to 0 if A = B, to -1 if A < B and to 1 otherwise",
+        CommandType.READ_2_VALUES),
+    JMP("Jump", "Jump to address", CommandType.JUMP_NON_CONDITIONAL),
+    JEQ("Jump if equal", commandType = CommandType.JUMP_CONDITIONAL),
+    JNE("Jump if not equal", commandType = CommandType.JUMP_CONDITIONAL),
+    JGT("Jump if greater", commandType = CommandType.JUMP_CONDITIONAL),
+    JLW("Jump if lower", commandType = CommandType.JUMP_CONDITIONAL),
 
-    JSR("Jump to subroutine", 1),
-    RET("Return from subroutine", 0),
+    JSR("Jump to subroutine", commandType = CommandType.JUMP_TO_SUBROUTINE),
+    RET("Return from subroutine", commandType = CommandType.NO_ARGS),
     ;
 
     val code get() = name
 
-    enum class LastArgumentType {
-        REGULAR,
-        ADDRESS_TO_WRITE_AT,
-        ADDRESS_TO_JUMP_TO,
+    enum class CommandType(val argsCount: Int) {
+        NO_ARGS(0),
+        READ_1_VALUE(1),
+        READ_1_VALUE_AND_WRITE_TO_2ND(2),
+        READ_2_VALUES(2),
+        READ_2_VALUES_AND_WRITE_TO_2ND(2),
+        JUMP_NON_CONDITIONAL(1),
+        JUMP_CONDITIONAL(1),
+        JUMP_TO_SUBROUTINE(1),
+        ;
+
+        init {
+            check(argsCount <= 2) { "For now max supported count of arguments is 2" }
+        }
     }
 
     val intCode: Int
         get() = ordinal
 
     companion object {
-        fun getByIntCode(ordinal: Int): CommandCode? {
+        fun parse(commandWord: Int): CommandCode? {
+            val ordinal = commandWord shr (2 * Constants.Model.BITS_IN_COMMAND_FOR_EACH_ADDRESSING)
             val values = values()
             return if (ordinal < values.size) {
                 values[ordinal]

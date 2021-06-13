@@ -8,8 +8,8 @@ abstract class PeripheralHardwareItem(
     val addressRange: IntRange,
 ): HardwareItem(busModel) {
     init {
-        check(addressRange.first.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL
-                && addressRange.last.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_MEM_CELL) {
+        check(addressRange.first.countValuableBits() <= Constants.Model.BITS_IN_NORMAL_CELL
+                && addressRange.last.countValuableBits() <= Constants.Model.BITS_IN_NORMAL_CELL) {
             "Possible addresses has to much bits"
         }
         check(addressRange.step == 1)

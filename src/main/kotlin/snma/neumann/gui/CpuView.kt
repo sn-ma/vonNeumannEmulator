@@ -18,7 +18,12 @@ class CpuView(val cpuModel: CpuModel) : View("CPU") {
                         description.regName == null -> "R${description.ordinal}"
                         else -> "${description.regName} (R${description.ordinal})"
                     })
-                    memCellTextField(memCell)
+                    memCellTextField(memCell) {
+                        if (description.isInternal) {
+                            isEditable = false
+                            tooltip("Internal register (not editable)")
+                        }
+                    }
                 }
             }
         }

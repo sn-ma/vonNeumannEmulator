@@ -2,9 +2,8 @@ package snma.neumann
 
 object Constants {
     object Model {
-        const val BITS_IN_NORMAL_MEM_CELL = 8
-        const val BITS_IN_ADDRESS_FOR_ADDRESSING = 2
-        const val BITS_IN_ADDRESS_MEM_CELL = 2 * 8 - BITS_IN_ADDRESS_FOR_ADDRESSING
+        const val BITS_IN_COMMAND_FOR_EACH_ADDRESSING = 4
+        const val BITS_IN_NORMAL_CELL = 16
         const val BITS_IN_FLAGS_MEM_CELL = 3
     }
 

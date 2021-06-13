@@ -6,7 +6,7 @@ import kotlin.test.assertTrue
 class TestCommandCode {
     @Test
     fun consistency() {
-        CommandCode.values().forEach {
+        CommandCode.CommandType.values().forEach {
             assertTrue(it.argsCount in 0..2, "$it has an unexpected number of arguments")
         }
     }

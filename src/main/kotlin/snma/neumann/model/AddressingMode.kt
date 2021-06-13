@@ -3,36 +3,39 @@ package snma.neumann.model
 import snma.neumann.CommonUtils.countValuableBits
 import snma.neumann.Constants
 
+/**
+ * Addressing mode for operands are coded by the last bits of the command word.
+ * To get addressing mode, use function [AddressingMode.parse]
+ */
 enum class AddressingMode {
     CONSTANT,
     REGISTER,
     DIRECT,
-    INDIRECT,
+    REGISTER_INDIRECT,
     ;
 
     private val bitmask: Int get() = ordinal
 
     init {
-        check(bitmask.countValuableBits() <= Constants.Model.BITS_IN_ADDRESS_FOR_ADDRESSING) {
+        check(bitmask.countValuableBits() <= Constants.Model.BITS_IN_COMMAND_FOR_EACH_ADDRESSING) {
             "Too much addressing modes for given number of addressing bits"
         }
     }
 
     companion object {
+        private val bitmaskBitmask = "1".repeat(Constants.Model.BITS_IN_COMMAND_FOR_EACH_ADDRESSING).toInt(2)
+
         /**
-         * Returns the register instance by the first byte. Only for [REGISTER] addressing mode
+         * @param argumentIndex 0 for the first argument, 1 for second
          */
-        fun getRegisterByFirstByte(cpuModel: CpuModel, firstByte: Int): MemoryCellModel? {
-            check(getByFirstByte(firstByte) == REGISTER) { "Meaningless call" }
-            return cpuModel.getOpenRegisterByIndex(firstByte and dataBitmask)
-        }
-
-        private val dataBitmask = "1".repeat(8 - Constants.Model.BITS_IN_ADDRESS_FOR_ADDRESSING).toInt(2)
-
-        fun getByFirstByte(firstByte: Int): AddressingMode? {
-            val address = firstByte shr (Constants.Model.BITS_IN_ADDRESS_MEM_CELL - 8)
-            val allAddressingModes = values()
-            return if (address in allAddressingModes.indices) allAddressingModes[address] else null
+        fun parse(commandWord: Int, argumentIndex: Int): AddressingMode? {
+            val bitmask = (commandWord shr (Constants.Model.BITS_IN_COMMAND_FOR_EACH_ADDRESSING * (1 - argumentIndex))) and
+                    bitmaskBitmask
+            val values = values()
+            if (bitmask !in values.indices) {
+                return null
+            }
+            return values[bitmask]
         }
     }
 }
