@@ -6,6 +6,7 @@ import io.reactivex.disposables.Disposable
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import snma.neumann.Defaults
+import snma.neumann.model.CpuModel
 import snma.neumann.model.Simulation
 import tornadofx.getValue
 import tornadofx.onChange
@@ -25,10 +26,17 @@ class AppStateModel {
 
     private var subscription: Disposable? = null // Should be always not null, when isRunning, and null when not
 
-    fun makeStep() {
-        if (isRunning) {
-            error("Trying to make step when already running")
+    init {
+        simulation.cpuModel.isStoppedProperty.addListener { _, _, newValue ->
+            if (newValue != CpuModel.CommonStopMode.NOT_STOPPED) {
+                stop()
+            }
         }
+    }
+
+    fun makeStep() {
+        check (!isRunning) { "Trying to make step when already running" }
+        simulation.cpuModel.isStopped = CpuModel.CommonStopMode.NOT_STOPPED
         simulation.tick()
     }
 
@@ -41,6 +49,7 @@ class AppStateModel {
     }
 
     fun start() {
+        simulation.cpuModel.isStopped = CpuModel.CommonStopMode.NOT_STOPPED
         if (subscription == null) {
             isRunning = true
             subscription = Observable.interval(tickPeriod.toLong(), TimeUnit.MILLISECONDS)

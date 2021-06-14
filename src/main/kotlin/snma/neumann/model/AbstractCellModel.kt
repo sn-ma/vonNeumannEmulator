@@ -18,5 +18,6 @@ abstract class AbstractCellModel<T: Any>(private val defaultValue: T) {
 
     fun reset() {
         value = defaultValue
+        wasRecentlyModifiedPropertyRW.set(false)
     }
 }

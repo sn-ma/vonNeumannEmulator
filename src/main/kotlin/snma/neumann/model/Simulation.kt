@@ -26,7 +26,6 @@ class Simulation {
 
     fun reset() {
         allHardware.forEach { it.reset() }
-        cleanWasRecentlyModified()
     }
 
     private fun cleanWasRecentlyModified() {

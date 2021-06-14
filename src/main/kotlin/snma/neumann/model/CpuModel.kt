@@ -1,10 +1,31 @@
 package snma.neumann.model
 
+import javafx.beans.property.SimpleObjectProperty
 import org.slf4j.LoggerFactory
+import snma.neumann.CommonUtils
+import tornadofx.getValue
+import tornadofx.setValue
 
 class CpuModel (
     busModel: BusModel,
 ) : BusConnectedHardwareItem(busModel) {
+    val isStoppedProperty = object : SimpleObjectProperty<StopMode>(CommonStopMode.NOT_STOPPED) {
+        override fun set(newValue: StopMode) {
+            if (value != newValue) {
+                actionsStack.clear()
+                if (newValue == CommonStopMode.NOT_STOPPED) {
+                    actionsStack.push(SimpleAction.START_READING_COMMAND)
+                }
+            }
+            super.set(newValue)
+        }
+    }
+    var isStopped: StopMode by isStoppedProperty
+
+    sealed interface StopMode
+    enum class CommonStopMode: StopMode { NOT_STOPPED, HALTED }
+    data class ErrorStopMode(val description: String): StopMode
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val actionsStack = MyStack<CpuAction>().apply { push(SimpleAction.START_READING_COMMAND) }
@@ -30,6 +51,8 @@ class CpuModel (
 
     val registers = RegisterDescription.values().associateWith { MemoryCellModel(it.type) }
 
+    override val memoryCells = registers.values
+
     fun getOpenRegisterByIndex(index: Int): MemoryCellModel? {
         val allDescriptions = RegisterDescription.values()
         if (index !in allDescriptions.indices) {
@@ -42,15 +65,23 @@ class CpuModel (
         return registers[description]!!
     }
 
-    override val memoryCells = registers.values
-
     override fun reset() {
         super.reset()
 
-        actionsStack.clear()
-        actionsStack.push(SimpleAction.START_READING_COMMAND)
         addressingModeA = null
         addressingModeB = null
+        isStopped = CommonStopMode.NOT_STOPPED
+    }
+
+    private fun setError(description: String) {
+        val message = "Error: $description"
+        logger.error(message)
+        isStopped = ErrorStopMode(message)
+    }
+
+    private fun setErrorInCodeWord(description: String, codeWord: Int) {
+        val commandWordString = CommonUtils.intToHexString(codeWord, 2)
+        setError("$description (code $commandWordString")
     }
 
     override fun tick() {
@@ -87,8 +118,7 @@ class CpuModel (
                 SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS -> {
                     val goalRegister = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegister == null) {
-                        logger.error("Wrong register number: ${busModel.dataBus.intValue}")
-                        // TODO: notify about error in GUI
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.intValue)
                         return
                     }
                     busModel.addressBus.intValue = goalRegister.intValue
@@ -103,15 +133,14 @@ class CpuModel (
                     // Calculate command code and addressing modes
                     var commandCode = CommandCode.parse(cmdWordRead)
                     if (commandCode == null) {
-                        // TODO: report an error in GUI
-                        logger.error("Unrecognized command with code $cmdWordRead")
+                        setErrorInCodeWord("Unrecognized command", cmdWordRead)
                         return
                     }
                     addressingModeA = if (commandCode.commandType.argsCount >= 1) {
                         val tmp = AddressingMode.parse(cmdWordRead, 0)
                         if (tmp == null) {
-                            // TODO: report an error in GUI
-                            logger.error("Unrecognized addressing mode for first argument in command $commandCode")
+                            setErrorInCodeWord(
+                                "Unrecognized addressing mode for first argument in the given command", cmdWordRead)
                             return
                         }
                         tmp
@@ -121,8 +150,8 @@ class CpuModel (
                     addressingModeB = if (commandCode.commandType.argsCount == 2) {
                         val tmp = AddressingMode.parse(cmdWordRead, 1)
                         if (tmp == null) {
-                            // TODO: report an error in GUI
-                            logger.error("Unrecognized addressing mode for second argument in command $commandCode")
+                            setErrorInCodeWord(
+                                "Unrecognized addressing mode for second argument in the given command", cmdWordRead)
                             return
                         }
                         tmp
@@ -180,9 +209,9 @@ class CpuModel (
                                 }
                             }
                             CommandCode.CommandType.JUMP_CONDITIONAL,
-                            CommandCode.CommandType.NO_ARGS
-                            ->
+                            CommandCode.CommandType.NO_ARGS -> {
                                 error("Supposed to be processed earlier")
+                            }
                         }
                         actionsStack.push(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                     }
@@ -198,8 +227,7 @@ class CpuModel (
                 SimpleAction.READ_REG_A_FROM_REG_BY_DATA_BUS -> {
                     val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegisterCell == null) {
-                        logger.error("Wrong register number")
-                        // TODO: notify about error in gui?
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.intValue)
                         return
                     }
                     registers[RegisterDescription.R_A]!!.intValue = goalRegisterCell.intValue
@@ -212,8 +240,7 @@ class CpuModel (
                 SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS -> {
                     val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegisterCell == null) {
-                        logger.error("Wrong register number")
-                        // TODO: notify about error in gui?
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.intValue)
                         return
                     }
                     registers[RegisterDescription.R_ADDRESS]!!.intValue = goalRegisterCell.intValue
@@ -227,7 +254,10 @@ class CpuModel (
                         "Conditional jumps should be processed on command code just read"
                     }
                     when (currAction.commandCode) {
-                        CommandCode.HLT -> return
+                        CommandCode.HLT -> {
+                            isStopped = CommonStopMode.HALTED
+                            return
+                        }
                         CommandCode.DLY -> {
                             if (registers[RegisterDescription.R_A]!!.intValue != 0) {
                                 registers[RegisterDescription.R_A]!!.intValue--

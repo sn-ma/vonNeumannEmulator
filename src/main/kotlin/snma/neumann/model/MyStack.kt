@@ -22,4 +22,8 @@ class MyStack<T> {
     fun clear() {
         deque.clear()
     }
+
+    fun isEmpty(): Boolean = deque.isEmpty()
+
+    override fun toString() = deque.toString()
 }

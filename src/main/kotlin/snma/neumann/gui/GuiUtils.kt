@@ -10,6 +10,7 @@ import javafx.event.EventTarget
 import javafx.scene.control.Control
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
+import javafx.scene.layout.Pane
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
@@ -153,15 +154,18 @@ object GuiUtils {
     fun EventTarget.hardwareItemView(
         hardwareItem: HardwareItem,
         title: String,
-        subtitle: String = "",
+        subtitleAppender: (Pane.() -> Unit),
         additionalButtons: List<Pair<String, () -> Unit>>? = null,
         op: (VBox.() -> Unit)
     ) = vbox {
+        spacing = 10.0
+
         textflow {
             text(title) {
                 font = Font("System bold", Constants.View.FONT_SIZE_BIG)
             }
-            text("\n" + subtitle)
+            text("\n")
+            subtitleAppender()
         }
         hbox {
             spacing = Constants.View.BUTTONS_SPACING
@@ -175,4 +179,14 @@ object GuiUtils {
 
         op()
     }
+
+    fun EventTarget.hardwareItemView(
+        hardwareItem: HardwareItem,
+        title: String,
+        subtitle: String = "",
+        additionalButtons: List<Pair<String, () -> Unit>>? = null,
+        op: (VBox.() -> Unit)
+    ) = hardwareItemView(
+        hardwareItem, title, { text(subtitle) }, additionalButtons, op
+    )
 }
