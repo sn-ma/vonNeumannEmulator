@@ -1,16 +1,13 @@
 package snma.neumann.model
 
 import org.slf4j.LoggerFactory
-import snma.neumann.CommonUtils.pushFront
-import java.util.*
 
 class CpuModel (
     busModel: BusModel,
 ) : BusConnectedHardwareItem(busModel) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    // TODO rename to stack and change the working logic accordingly
-    private val actionsQueue: LinkedList<CpuAction> = LinkedList<CpuAction>().apply { add(SimpleAction.START_READING_COMMAND) }
+    private val actionsStack = MyStack<CpuAction>().apply { push(SimpleAction.START_READING_COMMAND) }
     private var addressingModeA: AddressingMode? = null
     private var addressingModeB: AddressingMode? = null
 
@@ -50,8 +47,8 @@ class CpuModel (
     override fun reset() {
         super.reset()
 
-        actionsQueue.clear()
-        actionsQueue.add(SimpleAction.START_READING_COMMAND)
+        actionsStack.clear()
+        actionsStack.push(SimpleAction.START_READING_COMMAND)
         addressingModeA = null
         addressingModeB = null
     }
@@ -59,16 +56,16 @@ class CpuModel (
     override fun tick() {
         logger.info("Tick started")
         while (true) {
-            val currAction = actionsQueue.pollFirst()
-            logger.info("Action {}, actions deque: {}", currAction, actionsQueue)
+            val currAction = actionsStack.poll()
+            logger.info("Action {}, actions stack: {}", currAction, actionsStack)
             when (currAction) {
                 null -> return
                 SimpleAction.TICK -> return
                 SimpleAction.START_READING_COMMAND -> {
-                    actionsQueue.pushFront(
-                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC,
-                        SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING,
+                    actionsStack.push(
                         SimpleAction.START_READING_COMMAND,
+                        SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING,
+                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC,
                     )
                 }
                 SimpleAction.CLEAN_BUS_MODE -> {
@@ -79,13 +76,13 @@ class CpuModel (
                     busModel.modeBus.value = BusModel.Mode.READ
                     registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue += 1
 
-                    actionsQueue.addFirst(SimpleAction.TICK)
+                    actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS -> {
                     busModel.addressBus.intValue = busModel.dataBus.intValue
                     busModel.modeBus.value = BusModel.Mode.READ
 
-                    actionsQueue.addFirst(SimpleAction.TICK)
+                    actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS -> {
                     val goalRegister = getOpenRegisterByIndex(busModel.dataBus.intValue)
@@ -97,7 +94,7 @@ class CpuModel (
                     busModel.addressBus.intValue = goalRegister.intValue
                     busModel.modeBus.value = BusModel.Mode.READ
 
-                    actionsQueue.addFirst(SimpleAction.TICK)
+                    actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING -> {
                     val cmdWordRead = busModel.dataBus.intValue
@@ -140,11 +137,11 @@ class CpuModel (
                         commandCode = CommandCode.JMP
                     }
 
-                    actionsQueue.addFirst(CommandExecution(commandCode))
+                    actionsStack.push(CommandExecution(commandCode))
                     if (commandCode == CommandCode.DLY) { // Hack to make a delay work as expected
-                        actionsQueue.addFirst(SimpleAction.INC_REG_A)
+                        actionsStack.push(SimpleAction.INC_REG_A)
                     }
-                    actionsQueue.addFirst(SimpleAction.CLEAN_BUS_MODE)
+                    actionsStack.push(SimpleAction.CLEAN_BUS_MODE)
 
                     // Decide how to read the first argument
                     if (commandCode.commandType.argsCount >= 1) {
@@ -154,15 +151,15 @@ class CpuModel (
                             CommandCode.CommandType.READ_2_VALUES,
                             CommandCode.CommandType.READ_2_VALUES_AND_WRITE_TO_2ND -> {
                                 when (addressingModeA ?: error("Addressing mode A should be set above")) {
-                                    AddressingMode.CONSTANT -> actionsQueue.addFirst(SimpleAction.READ_REG_A_FROM_DATA_BUS)
-                                    AddressingMode.REGISTER -> actionsQueue.addFirst(SimpleAction.READ_REG_A_FROM_REG_BY_DATA_BUS)
-                                    AddressingMode.DIRECT -> actionsQueue.pushFront(
+                                    AddressingMode.CONSTANT -> actionsStack.push(SimpleAction.READ_REG_A_FROM_DATA_BUS)
+                                    AddressingMode.REGISTER -> actionsStack.push(SimpleAction.READ_REG_A_FROM_REG_BY_DATA_BUS)
+                                    AddressingMode.DIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_A_FROM_DATA_BUS,
                                         SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS,
-                                        SimpleAction.READ_REG_A_FROM_DATA_BUS
                                     )
-                                    AddressingMode.REGISTER_INDIRECT -> actionsQueue.pushFront(
+                                    AddressingMode.REGISTER_INDIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_A_FROM_DATA_BUS,
                                         SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS,
-                                        SimpleAction.READ_REG_A_FROM_DATA_BUS
                                     )
                                 }
                             }
@@ -170,15 +167,15 @@ class CpuModel (
                             CommandCode.CommandType.JUMP_TO_SUBROUTINE
                             -> {
                                 when (addressingModeA ?: error("Addressing mode A should be set above")) {
-                                    AddressingMode.CONSTANT -> actionsQueue.addFirst(SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS)
-                                    AddressingMode.REGISTER -> actionsQueue.addFirst(SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS)
-                                    AddressingMode.DIRECT -> actionsQueue.pushFront(
+                                    AddressingMode.CONSTANT -> actionsStack.push(SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS)
+                                    AddressingMode.REGISTER -> actionsStack.push(SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS)
+                                    AddressingMode.DIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS,
                                         SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS,
-                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS
                                     )
-                                    AddressingMode.REGISTER_INDIRECT -> actionsQueue.pushFront(
+                                    AddressingMode.REGISTER_INDIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS,
                                         SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS,
-                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS
                                     )
                                 }
                             }
@@ -187,7 +184,7 @@ class CpuModel (
                             ->
                                 error("Supposed to be processed earlier")
                         }
-                        actionsQueue.addFirst(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
+                        actionsStack.push(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                     }
 
                     if (commandCode.commandType.argsCount >= 2) {
@@ -234,8 +231,8 @@ class CpuModel (
                         CommandCode.DLY -> {
                             if (registers[RegisterDescription.R_A]!!.intValue != 0) {
                                 registers[RegisterDescription.R_A]!!.intValue--
-                                actionsQueue.addFirst(CommandExecution(CommandCode.DLY))
-                                actionsQueue.addFirst(SimpleAction.TICK)
+                                actionsStack.push(CommandExecution(CommandCode.DLY))
+                                actionsStack.push(SimpleAction.TICK)
                             }
                         }
                         CommandCode.JMP -> {
