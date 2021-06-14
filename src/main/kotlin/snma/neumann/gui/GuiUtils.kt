@@ -164,6 +164,7 @@ object GuiUtils {
             text("\n" + subtitle)
         }
         hbox {
+            spacing = Constants.View.BUTTONS_SPACING
             button("Reset").action { hardwareItem.reset() }
             if (additionalButtons != null) {
                 for ((name, action) in additionalButtons) {

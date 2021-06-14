@@ -1,6 +1,7 @@
 package snma.neumann.gui
 
 import javafx.geometry.Pos
+import snma.neumann.Constants
 import snma.neumann.gui.GuiUtils.positiveIntTextField
 import tornadofx.*
 
@@ -9,7 +10,7 @@ class AppMenu: View() {
 
     override val root = hbox {
         alignment = Pos.CENTER
-        spacing = 5.0
+        spacing = Constants.View.BUTTONS_SPACING
 
         // TODO: add tooltips
 

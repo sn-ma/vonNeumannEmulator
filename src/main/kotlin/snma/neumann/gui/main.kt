@@ -16,6 +16,8 @@ class MyRootView: View() {
         title = "von Neumann VM"
         styleClass.add(JMetroStyleClass.BACKGROUND)
 
+        paddingAll = 5.0
+
         top<AppMenu>()
         center<SimulationView>()
 
@@ -26,7 +28,7 @@ class MyRootView: View() {
 class SimulationView: View() {
     override val root = hbox {
         spacing = 20.0
-        paddingAll = 10.0
+        paddingTop = 10.0
 
         val simulation = (app as MyApp).appStateModel.simulation
         add(BusView(simulation.busModel))
