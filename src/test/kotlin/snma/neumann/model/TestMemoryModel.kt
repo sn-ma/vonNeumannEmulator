@@ -16,13 +16,13 @@ class TestMemoryModel {
     @Test
     fun memoryCellByAddress() {
         assertTrue("") {
-            memoryModel.memoryCellByAddress(256) === memoryModel.memoryCells[0]
+            memoryModel.getRequiredMemoryCellByAddress(256) === memoryModel.memoryCells[0]
         }
         assertTrue("") {
-            memoryModel.memoryCellByAddress(300) === memoryModel.memoryCells[300 - 256]
+            memoryModel.getRequiredMemoryCellByAddress(300) === memoryModel.memoryCells[300 - 256]
         }
         assertFails {
-            memoryModel.memoryCellByAddress(255)
+            memoryModel.getRequiredMemoryCellByAddress(255)
         }
     }
 
@@ -31,19 +31,19 @@ class TestMemoryModel {
         val address = 300
         val data = 123
 
-        memoryModel.memoryCellByAddress(address).value = data
+        memoryModel.getRequiredMemoryCellByAddress(address).intValue = data
 
         busModel.apply {
-            addressBus.value = address
-            dataBus.value = 0
+            addressBus.intValue = address
+            dataBus.intValue = 0
             modeBus.value = BusModel.Mode.READ
         }
 
-        assertNotEquals(data, busModel.dataBus.value)
+        assertNotEquals(data, busModel.dataBus.intValue)
 
         memoryModel.tick()
 
-        assertEquals(data, busModel.dataBus.value)
+        assertEquals(data, busModel.dataBus.intValue)
     }
 
     @Test
@@ -51,19 +51,19 @@ class TestMemoryModel {
         val address = 300
         val data = 123
 
-        memoryModel.memoryCellByAddress(address).value = 0
+        memoryModel.getRequiredMemoryCellByAddress(address).intValue = 0
 
         busModel.apply {
-            addressBus.value = address
-            dataBus.value = data
+            addressBus.intValue = address
+            dataBus.intValue = data
             modeBus.value = BusModel.Mode.WRITE
         }
 
-        assertNotEquals(data, memoryModel.memoryCellByAddress(address).value)
+        assertNotEquals(data, memoryModel.getRequiredMemoryCellByAddress(address).intValue)
 
         memoryModel.tick()
 
-        assertEquals(data, memoryModel.memoryCellByAddress(address).value)
+        assertEquals(data, memoryModel.getRequiredMemoryCellByAddress(address).intValue)
     }
 
     @Test
@@ -72,17 +72,17 @@ class TestMemoryModel {
         val busData = 123
         val memData = 45
 
-        memoryModel.memoryCellByAddress(address).value = memData
+        memoryModel.getRequiredMemoryCellByAddress(address).intValue = memData
 
         busModel.apply {
-            addressBus.value = address
-            dataBus.value = busData
+            addressBus.intValue = address
+            dataBus.intValue = busData
             modeBus.value = BusModel.Mode.IDLE
         }
 
         memoryModel.tick()
 
-        assertEquals(busData, busModel.dataBus.value)
-        assertEquals(memData, memoryModel.memoryCellByAddress(address).value)
+        assertEquals(busData, busModel.dataBus.intValue)
+        assertEquals(memData, memoryModel.getRequiredMemoryCellByAddress(address).intValue)
     }
 }

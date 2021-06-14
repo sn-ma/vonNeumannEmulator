@@ -9,7 +9,7 @@ class Simulation {
         memoryModel,
     )
 
-    private val allHardware: List<HardwareItem> = listOf(cpuModel) + peripheralHardware
+    private val allHardware: List<HardwareItem> = listOf(busModel, cpuModel) + peripheralHardware
 
     private var lastTickWasPeripheral = false
 
@@ -25,13 +25,11 @@ class Simulation {
     }
 
     fun reset() {
-        busModel.reset()
         allHardware.forEach { it.reset() }
         cleanWasRecentlyModified()
     }
 
     private fun cleanWasRecentlyModified() {
-        busModel.cleanCellsWasRecentlyModified()
         allHardware
             .asSequence()
             .flatMap { it.memoryCells }

@@ -6,7 +6,7 @@ import snma.neumann.Constants
 abstract class PeripheralHardwareItem(
     busModel: BusModel,
     val addressRange: IntRange,
-): HardwareItem(busModel) {
+): BusConnectedHardwareItem(busModel) {
     init {
         check(addressRange.first.countValuableBits() <= Constants.Model.BITS_IN_NORMAL_CELL
                 && addressRange.last.countValuableBits() <= Constants.Model.BITS_IN_NORMAL_CELL) {
@@ -19,13 +19,13 @@ abstract class PeripheralHardwareItem(
     protected abstract fun write(address: Int, value: Int)
 
     final override fun tick() {
-        val currentAddress = busModel.addressBus.value
+        val currentAddress = busModel.addressBus.intValue
         if (currentAddress !in addressRange) {
             return
         }
         when (busModel.modeBus.value) {
-            BusModel.Mode.READ -> busModel.dataBus.value = read(currentAddress)
-            BusModel.Mode.WRITE -> write(currentAddress, busModel.dataBus.value)
+            BusModel.Mode.READ -> busModel.dataBus.intValue = read(currentAddress)
+            BusModel.Mode.WRITE -> write(currentAddress, busModel.dataBus.intValue)
             BusModel.Mode.IDLE -> { /* do nothing */}
         }
     }

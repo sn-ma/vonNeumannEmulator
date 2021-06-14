@@ -1,11 +1,9 @@
 package snma.neumann.model
 
-abstract class HardwareItem(val busModel: BusModel) {
-    abstract fun tick()
+abstract class HardwareItem {
+    abstract val memoryCells: Collection<AbstractCellModel<*>>
 
     open fun reset() {
-        memoryCells.forEach { it.value = 0 }
+        memoryCells.forEach { it.reset() }
     }
-
-    abstract val memoryCells: Iterable<MemoryCellModel>
 }

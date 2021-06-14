@@ -1,14 +1,16 @@
 package snma.neumann.gui
 
 import snma.neumann.gui.GuiUtils.enumCellView
-import snma.neumann.gui.GuiUtils.hardwareItemTitle
+import snma.neumann.gui.GuiUtils.hardwareItemView
 import snma.neumann.gui.GuiUtils.memCellTextField
 import snma.neumann.model.BusModel
-import tornadofx.*
+import tornadofx.View
+import tornadofx.gridpane
+import tornadofx.row
+import tornadofx.text
 
-class BusView(val busModel: BusModel): View("Bus") {
-    override val root = vbox {
-        hardwareItemTitle("Bus")
+class BusView(private val busModel: BusModel): View("Bus") {
+    override val root = hardwareItemView(busModel, "Bus") {
         gridpane {
             row {
                 text("Address: ")

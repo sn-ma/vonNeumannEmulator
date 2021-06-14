@@ -9,5 +9,6 @@ object Constants {
 
     object View {
         const val MEMORY_CELLS_PER_ROW = 8
+        const val FONT_SIZE_BIG = 20.0
     }
 }

@@ -3,7 +3,7 @@ package snma.neumann.gui
 import javafx.event.EventTarget
 import javafx.scene.control.ScrollPane
 import snma.neumann.CommonUtils.intToHexString
-import snma.neumann.gui.GuiUtils.hardwareItemTitle
+import snma.neumann.gui.GuiUtils.hardwareItemView
 import snma.neumann.gui.GuiUtils.memCellTextField
 import snma.neumann.model.MemoryCellModel
 import snma.neumann.model.MemoryModel
@@ -16,8 +16,11 @@ class MemoryView(
 ) : View("Memory") {
     private val rowsCount = ceil(memoryModel.addressRange.count() / cellsPerRow.toDouble()).toInt()
 
-    override val root = vbox {
-        hardwareItemTitle("Memory", "address range: ${memoryModel.addressRange.first}..${memoryModel.addressRange.last}")
+    override val root = hardwareItemView(
+        memoryModel, "Memory",
+        "address range: ${memoryModel.addressRange.first}..${memoryModel.addressRange.last}",
+        listOf("Load" to { TODO("Loading from file") })
+    ) {
         scrollpane(fitToHeight = true) {
             hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
             vbarPolicy = ScrollPane.ScrollBarPolicy.ALWAYS
@@ -43,7 +46,7 @@ class MemoryView(
     }
 
     private fun EventTarget.addMemCell(address: Int) {
-        memCellTextField(memoryModel.memoryCellByAddress(address)) {
+        memCellTextField(memoryModel.getRequiredMemoryCellByAddress(address)) {
             tooltip("Address: " + intToHexString(address, MemoryCellModel.Type.ADDRESS_CELL.bytesCount))
         }
     }

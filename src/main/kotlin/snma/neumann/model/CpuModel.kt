@@ -6,7 +6,7 @@ import java.util.*
 
 class CpuModel (
     busModel: BusModel,
-) : HardwareItem(busModel) {
+) : BusConnectedHardwareItem(busModel) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     // TODO rename to stack and change the working logic accordingly
@@ -75,33 +75,33 @@ class CpuModel (
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_PC -> {
-                    busModel.addressBus.value = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value
+                    busModel.addressBus.intValue = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue
                     busModel.modeBus.value = BusModel.Mode.READ
-                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value += 1
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue += 1
 
                     actionsQueue.addFirst(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS -> {
-                    busModel.addressBus.value = busModel.dataBus.value
+                    busModel.addressBus.intValue = busModel.dataBus.intValue
                     busModel.modeBus.value = BusModel.Mode.READ
 
                     actionsQueue.addFirst(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS -> {
-                    val goalRegister = getOpenRegisterByIndex(busModel.dataBus.value)
+                    val goalRegister = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegister == null) {
-                        logger.error("Wrong register number: ${busModel.dataBus.value}")
+                        logger.error("Wrong register number: ${busModel.dataBus.intValue}")
                         // TODO: notify about error in GUI
                         return
                     }
-                    busModel.addressBus.value = goalRegister.value
+                    busModel.addressBus.intValue = goalRegister.intValue
                     busModel.modeBus.value = BusModel.Mode.READ
 
                     actionsQueue.addFirst(SimpleAction.TICK)
                 }
                 SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING -> {
-                    val cmdWordRead = busModel.dataBus.value
-                    registers[RegisterDescription.R_CMD]!!.value = cmdWordRead
+                    val cmdWordRead = busModel.dataBus.intValue
+                    registers[RegisterDescription.R_CMD]!!.intValue = cmdWordRead
 
                     // Calculate command code and addressing modes
                     var commandCode = CommandCode.parse(cmdWordRead)
@@ -134,7 +134,7 @@ class CpuModel (
                     }
 
                     if (commandIsConditionalJumpAndNotNeeded(commandCode)) {
-                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value++
+                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue++
                         continue // go to reading next command
                     } else if (commandCode.commandType == CommandCode.CommandType.JUMP_CONDITIONAL) {
                         commandCode = CommandCode.JMP
@@ -195,35 +195,35 @@ class CpuModel (
                     }
                 }
                 SimpleAction.READ_REG_A_FROM_DATA_BUS -> {
-                    registers[RegisterDescription.R_A]!!.value = busModel.dataBus.value
+                    registers[RegisterDescription.R_A]!!.intValue = busModel.dataBus.intValue
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.READ_REG_A_FROM_REG_BY_DATA_BUS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.value)
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegisterCell == null) {
                         logger.error("Wrong register number")
                         // TODO: notify about error in gui?
                         return
                     }
-                    registers[RegisterDescription.R_A]!!.value = goalRegisterCell.value
+                    registers[RegisterDescription.R_A]!!.intValue = goalRegisterCell.intValue
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS -> {
-                    registers[RegisterDescription.R_ADDRESS]!!.value = busModel.dataBus.value
+                    registers[RegisterDescription.R_ADDRESS]!!.intValue = busModel.dataBus.intValue
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.value)
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegisterCell == null) {
                         logger.error("Wrong register number")
                         // TODO: notify about error in gui?
                         return
                     }
-                    registers[RegisterDescription.R_ADDRESS]!!.value = goalRegisterCell.value
+                    registers[RegisterDescription.R_ADDRESS]!!.intValue = goalRegisterCell.intValue
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.INC_REG_A -> {
-                    registers[RegisterDescription.R_A]!!.value++
+                    registers[RegisterDescription.R_A]!!.intValue++
                 }
                 is CommandExecution -> {
                     check(currAction.commandCode.commandType != CommandCode.CommandType.JUMP_CONDITIONAL) {
@@ -232,15 +232,15 @@ class CpuModel (
                     when (currAction.commandCode) {
                         CommandCode.HLT -> return
                         CommandCode.DLY -> {
-                            if (registers[RegisterDescription.R_A]!!.value != 0) {
-                                registers[RegisterDescription.R_A]!!.value--
+                            if (registers[RegisterDescription.R_A]!!.intValue != 0) {
+                                registers[RegisterDescription.R_A]!!.intValue--
                                 actionsQueue.addFirst(CommandExecution(CommandCode.DLY))
                                 actionsQueue.addFirst(SimpleAction.TICK)
                             }
                         }
                         CommandCode.JMP -> {
-                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value =
-                                registers[RegisterDescription.R_ADDRESS]!!.value
+                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue =
+                                registers[RegisterDescription.R_ADDRESS]!!.intValue
                         }
                         else -> TODO("Command ${currAction.commandCode} is not yet implemented")
                     }

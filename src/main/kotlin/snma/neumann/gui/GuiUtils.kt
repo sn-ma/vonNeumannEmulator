@@ -3,19 +3,23 @@ package snma.neumann.gui
 import com.github.thomasnield.rxkotlinfx.toObservableChanges
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
+import javafx.beans.property.IntegerProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventHandler
 import javafx.event.EventTarget
 import javafx.scene.control.Control
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
+import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
 import snma.neumann.CommonUtils
+import snma.neumann.Constants
 import snma.neumann.model.AbstractCellModel
 import snma.neumann.model.EnumCellModel
+import snma.neumann.model.HardwareItem
 import snma.neumann.model.MemoryCellModel
 import tornadofx.*
 import kotlin.reflect.KProperty1
@@ -23,7 +27,7 @@ import kotlin.reflect.KProperty1
 object GuiUtils {
     private fun<M> EventTarget.customFormattedTextField(
         model: M,
-        propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
+        propertyExtractor: KProperty1<M, IntegerProperty>,
         numberStringConverter: StringConverter<Number>,
         op: (TextField.() -> Unit)?,
     ): TextField {
@@ -106,7 +110,7 @@ object GuiUtils {
 
     private class FormattedIntViewModel<M>(
         model: M,
-        propertyExtractor: KProperty1<M, SimpleIntegerProperty>,
+        propertyExtractor: KProperty1<M, IntegerProperty>,
         private val numberStringConverter: StringConverter<Number>
     ) : ItemViewModel<M>(model) {
         val intProperty = bind(propertyExtractor) // We must use this binding for rollback to work
@@ -126,7 +130,7 @@ object GuiUtils {
     }
 
     @Deprecated("Not supposed to be used from outside of the class, but should be made public")
-    fun Control.addRecentlyModifiedStyling(cellModel: AbstractCellModel) {
+    fun <T : Any> Control.addRecentlyModifiedStyling(cellModel: AbstractCellModel<T>) {
         cellModel.wasRecentlyModifiedProperty.toObservableChanges().subscribe {
             if (it.newVal) {
                 check(style == "") { "Style of non-changed memory cell isn't empty! Probably, styling logic has changed" }
@@ -146,10 +150,28 @@ object GuiUtils {
         }
     }
 
-    fun EventTarget.hardwareItemTitle(title: String, subtitle: String = "") = textflow {
-        text(title) {
-            font = Font("System bold", 20.0)
+    fun EventTarget.hardwareItemView(
+        hardwareItem: HardwareItem,
+        title: String,
+        subtitle: String = "",
+        additionalButtons: List<Pair<String, () -> Unit>>? = null,
+        op: (VBox.() -> Unit)
+    ) = vbox {
+        textflow {
+            text(title) {
+                font = Font("System bold", Constants.View.FONT_SIZE_BIG)
+            }
+            text("\n" + subtitle)
         }
-        text("\n" + subtitle)
+        hbox {
+            button("Reset").action { hardwareItem.reset() }
+            if (additionalButtons != null) {
+                for ((name, action) in additionalButtons) {
+                    button(name).action(action)
+                }
+            }
+        }
+
+        op()
     }
 }

@@ -1,13 +1,12 @@
 package snma.neumann.gui
 
-import snma.neumann.gui.GuiUtils.hardwareItemTitle
+import snma.neumann.gui.GuiUtils.hardwareItemView
 import snma.neumann.gui.GuiUtils.memCellTextField
 import snma.neumann.model.CpuModel
 import tornadofx.*
 
 class CpuView(val cpuModel: CpuModel) : View("CPU") {
-    override val root = vbox {
-        hardwareItemTitle("CPU")
+    override val root = hardwareItemView(cpuModel, "CPU") {
         gridpane {
             for (description in CpuModel.RegisterDescription.values()) {
                 val memCell = cpuModel.registers[description]!!
