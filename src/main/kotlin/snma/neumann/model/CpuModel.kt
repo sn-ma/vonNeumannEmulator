@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import snma.neumann.CommonUtils
 import tornadofx.getValue
 import tornadofx.setValue
+import kotlin.math.sign
 
 class CpuModel (
     busModel: BusModel,
@@ -29,8 +30,6 @@ class CpuModel (
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val actionsStack = MyStack<CpuAction>().apply { push(SimpleAction.START_READING_COMMAND) }
-    private var addressingModeA: AddressingMode? = null
-    private var addressingModeB: AddressingMode? = null
 
     enum class RegisterDescription(
         val regName: String? = null,
@@ -68,8 +67,8 @@ class CpuModel (
     override fun reset() {
         super.reset()
 
-        addressingModeA = null
-        addressingModeB = null
+        actionsStack.clear()
+        actionsStack.push(SimpleAction.START_READING_COMMAND)
         isStopped = CommonStopMode.NOT_STOPPED
     }
 
@@ -90,8 +89,10 @@ class CpuModel (
             val currAction = actionsStack.poll()
             logger.info("Action {}, actions stack: {}", currAction, actionsStack)
             when (currAction) {
-                null -> return
-                SimpleAction.TICK -> return
+                null,
+                SimpleAction.TICK -> {
+                    return
+                }
                 SimpleAction.START_READING_COMMAND -> {
                     actionsStack.push(
                         SimpleAction.START_READING_COMMAND,
@@ -136,7 +137,7 @@ class CpuModel (
                         setErrorInCodeWord("Unrecognized command", cmdWordRead)
                         return
                     }
-                    addressingModeA = if (commandCode.commandType.argsCount >= 1) {
+                    val addressingModeA = if (commandCode.commandType.argsCount >= 1) {
                         val tmp = AddressingMode.parse(cmdWordRead, 0)
                         if (tmp == null) {
                             setErrorInCodeWord(
@@ -147,7 +148,7 @@ class CpuModel (
                     } else {
                         null
                     }
-                    addressingModeB = if (commandCode.commandType.argsCount == 2) {
+                    val addressingModeB = if (commandCode.commandType.argsCount == 2) {
                         val tmp = AddressingMode.parse(cmdWordRead, 1)
                         if (tmp == null) {
                             setErrorInCodeWord(
@@ -166,11 +167,93 @@ class CpuModel (
                         commandCode = CommandCode.JMP
                     }
 
+                    // Command result writing (result should be in Reg B)
+                    when (commandCode.commandType) {
+                        CommandCode.CommandType.NO_ARGS,
+                        CommandCode.CommandType.READ_1_VALUE,
+                        CommandCode.CommandType.READ_2_VALUES,
+                        CommandCode.CommandType.JUMP_NON_CONDITIONAL,
+                        CommandCode.CommandType.JUMP_CONDITIONAL,
+                        CommandCode.CommandType.JUMP_TO_SUBROUTINE -> {
+                            /* No need to write any result */
+                        }
+                        CommandCode.CommandType.READ_1_VALUE_AND_WRITE_TO_2ND,
+                        CommandCode.CommandType.READ_2_VALUES_AND_WRITE_TO_2ND -> {
+                            when (addressingModeB ?: error("Addressing mode B should not be null now")) {
+                                AddressingMode.REGISTER -> {
+                                    actionsStack.push(SimpleAction.WRITE_RESULT_TO_REG_BY_REG_ADDRESS)
+                                }
+                                AddressingMode.CONSTANT,
+                                AddressingMode.DIRECT,
+                                AddressingMode.REGISTER_INDIRECT -> {
+                                    actionsStack.push(SimpleAction.WRITE_RESULT_TO_MEMORY_BY_REG_ADDRESS)
+                                }
+                            }
+                        }
+                    }
+
+                    // Command execution
                     actionsStack.push(CommandExecution(commandCode))
                     if (commandCode == CommandCode.DLY) { // Hack to make a delay work as expected
                         actionsStack.push(SimpleAction.INC_REG_A)
                     }
                     actionsStack.push(SimpleAction.CLEAN_BUS_MODE)
+
+                    // Read 2nd command argument
+                    if (commandCode.commandType.argsCount >= 2) {
+                        when (commandCode.commandType) {
+                            CommandCode.CommandType.READ_1_VALUE_AND_WRITE_TO_2ND -> {
+                                when (addressingModeB ?: error("Addressing mode B should be set above")) {
+                                    AddressingMode.CONSTANT -> actionsStack.push(
+                                        SimpleAction.INC_PROGRAM_COUNTER,
+                                        SimpleAction.SET_REG_ADDRESS_TO_PC
+                                    )
+                                    AddressingMode.REGISTER,
+                                    AddressingMode.DIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS, SimpleAction.MEM_READ_REQUEST_BY_REG_PC
+                                    )
+                                    AddressingMode.REGISTER_INDIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS, SimpleAction.MEM_READ_REQUEST_BY_REG_PC
+                                    )
+                                }
+                            }
+                            CommandCode.CommandType.READ_2_VALUES,
+                            CommandCode.CommandType.READ_2_VALUES_AND_WRITE_TO_2ND -> {
+                                when (addressingModeB ?: error("Addressing mode B should be set above")) {
+                                    AddressingMode.CONSTANT -> actionsStack.push(
+                                        SimpleAction.READ_REG_B_FROM_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC,
+                                        SimpleAction.SET_REG_ADDRESS_TO_PC
+                                    )
+                                    AddressingMode.REGISTER -> actionsStack.push(
+                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS,
+                                        SimpleAction.READ_REG_B_FROM_REG_BY_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC
+                                    )
+                                    AddressingMode.DIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_B_FROM_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS,
+                                        SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC
+                                    )
+                                    AddressingMode.REGISTER_INDIRECT -> actionsStack.push(
+                                        SimpleAction.READ_REG_B_FROM_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS,
+                                        SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS,
+                                        SimpleAction.MEM_READ_REQUEST_BY_REG_PC
+                                    )
+                                }
+                            }
+
+                            CommandCode.CommandType.NO_ARGS,
+                            CommandCode.CommandType.READ_1_VALUE,
+                            CommandCode.CommandType.JUMP_NON_CONDITIONAL,
+                            CommandCode.CommandType.JUMP_CONDITIONAL,
+                            CommandCode.CommandType.JUMP_TO_SUBROUTINE -> {
+                                error("Command type ${commandCode.commandType} should have less than 2 args")
+                            }
+                        }
+                    }
 
                     // Decide how to read the first argument
                     if (commandCode.commandType.argsCount >= 1) {
@@ -193,8 +276,7 @@ class CpuModel (
                                 }
                             }
                             CommandCode.CommandType.JUMP_NON_CONDITIONAL,
-                            CommandCode.CommandType.JUMP_TO_SUBROUTINE
-                            -> {
+                            CommandCode.CommandType.JUMP_TO_SUBROUTINE -> {
                                 when (addressingModeA ?: error("Addressing mode A should be set above")) {
                                     AddressingMode.CONSTANT -> actionsStack.push(SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS)
                                     AddressingMode.REGISTER -> actionsStack.push(SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS)
@@ -215,10 +297,6 @@ class CpuModel (
                         }
                         actionsStack.push(SimpleAction.MEM_READ_REQUEST_BY_REG_PC)
                     }
-
-                    if (commandCode.commandType.argsCount >= 2) {
-                        TODO("2nd arg is not yet supported")
-                    }
                 }
                 SimpleAction.READ_REG_A_FROM_DATA_BUS -> {
                     registers[RegisterDescription.R_A]!!.intValue = busModel.dataBus.intValue
@@ -237,6 +315,13 @@ class CpuModel (
                     registers[RegisterDescription.R_ADDRESS]!!.intValue = busModel.dataBus.intValue
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
+                SimpleAction.SET_REG_ADDRESS_TO_PC -> {
+                    registers[RegisterDescription.R_ADDRESS]!!.intValue =
+                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue
+                }
+                SimpleAction.INC_PROGRAM_COUNTER -> {
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue++
+                }
                 SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS -> {
                     val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
                     if (goalRegisterCell == null) {
@@ -248,6 +333,33 @@ class CpuModel (
                 }
                 SimpleAction.INC_REG_A -> {
                     registers[RegisterDescription.R_A]!!.intValue++
+                }
+                SimpleAction.READ_REG_B_FROM_DATA_BUS -> {
+                    registers[RegisterDescription.R_B]!!.intValue = busModel.dataBus.intValue
+                }
+                SimpleAction.READ_REG_B_FROM_REG_BY_DATA_BUS -> {
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.intValue)
+                    if (goalRegisterCell == null) {
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.intValue)
+                        return
+                    }
+                    registers[RegisterDescription.R_B]!!.intValue = goalRegisterCell.intValue
+                }
+                SimpleAction.WRITE_RESULT_TO_REG_BY_REG_ADDRESS -> {
+                    val goalRegisterCell = getOpenRegisterByIndex(registers[RegisterDescription.R_ADDRESS]!!.intValue)
+                    if (goalRegisterCell == null) {
+                        setErrorInCodeWord("Wrong register number", registers[RegisterDescription.R_ADDRESS]!!.intValue)
+                        return
+                    }
+
+                    goalRegisterCell.intValue = registers[RegisterDescription.R_B]!!.intValue
+                }
+                SimpleAction.WRITE_RESULT_TO_MEMORY_BY_REG_ADDRESS -> {
+                    busModel.addressBus.intValue = registers[RegisterDescription.R_ADDRESS]!!.intValue
+                    busModel.dataBus.intValue = registers[RegisterDescription.R_B]!!.intValue
+                    busModel.modeBus.value = BusModel.Mode.WRITE
+
+                    actionsStack.push(SimpleAction.CLEAN_BUS_MODE, SimpleAction.TICK)
                 }
                 is CommandExecution -> {
                     check(currAction.commandCode.commandType != CommandCode.CommandType.JUMP_CONDITIONAL) {
@@ -265,6 +377,46 @@ class CpuModel (
                                 actionsStack.push(SimpleAction.TICK)
                             }
                         }
+                        CommandCode.MOV -> {
+                            registers[RegisterDescription.R_B]!!.intValue =
+                                registers[RegisterDescription.R_A]!!.intValue
+                        }
+
+                        CommandCode.ADD -> {
+                            registers[RegisterDescription.R_B]!!.intValue +=
+                                registers[RegisterDescription.R_A]!!.intValue
+                        }
+                        CommandCode.SUB -> {
+                            registers[RegisterDescription.R_B]!!.intValue -=
+                                registers[RegisterDescription.R_A]!!.intValue
+                        }
+                        CommandCode.MUL -> {
+                            registers[RegisterDescription.R_B]!!.intValue *=
+                                registers[RegisterDescription.R_A]!!.intValue
+                        }
+                        CommandCode.DIV -> {
+                            val denominator = registers[RegisterDescription.R_A]!!.intValue
+                            if (denominator == 0) {
+                                setError("Zero division")
+                                return
+                            }
+                            registers[RegisterDescription.R_B]!!.intValue /= denominator
+                        }
+                        CommandCode.BAND -> {
+                            registers[RegisterDescription.R_B]!!.intValue =
+                                registers[RegisterDescription.R_B]!!.intValue and registers[RegisterDescription.R_A]!!.intValue
+                        }
+                        CommandCode.BOR -> {
+                            registers[RegisterDescription.R_B]!!.intValue =
+                                registers[RegisterDescription.R_B]!!.intValue or registers[RegisterDescription.R_A]!!.intValue
+                        }
+
+                        CommandCode.CMP -> {
+                            registers[RegisterDescription.R_FLAGS]!!.intValue =
+                                (registers[RegisterDescription.R_A]!!.intValue -
+                                        registers[RegisterDescription.R_B]!!.intValue).sign
+                        }
+
                         CommandCode.JMP -> {
                             registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue =
                                 registers[RegisterDescription.R_ADDRESS]!!.intValue
@@ -281,7 +433,21 @@ class CpuModel (
         if (commandCode.commandType != CommandCode.CommandType.JUMP_CONDITIONAL) {
             return false
         }
-        TODO()
+        val cmpResult = when(registers[RegisterDescription.R_FLAGS]!!.intValue) {
+            1 -> 1
+            0 -> 0
+            3 -> -1 // because of bit clipping
+            else -> error("Unexpected value of compare register (${registers[RegisterDescription.R_FLAGS]!!.intValue})")
+        }
+        return when (commandCode) {
+            CommandCode.JEQ -> cmpResult != 0
+            CommandCode.JNE -> cmpResult == 0
+            CommandCode.JGT -> cmpResult <= 0
+            CommandCode.JGE -> cmpResult < 0
+            CommandCode.JLW -> cmpResult >= 0
+            CommandCode.JLE -> cmpResult > 0
+            else -> error("$commandCode is unexpected here")
+        }
     }
 }
 
@@ -341,6 +507,16 @@ private enum class SimpleAction: CpuAction {
     READ_REG_ADDRESS_FROM_DATA_BUS,
 
     /**
+     * Reg Address := Program Counter
+     */
+    SET_REG_ADDRESS_TO_PC,
+
+    /**
+     * Program Counter += 1
+     */
+    INC_PROGRAM_COUNTER,
+
+    /**
      * Reg A := Data Bus
      *
      * Also clean Bus Mode
@@ -348,16 +524,21 @@ private enum class SimpleAction: CpuAction {
     READ_REG_A_FROM_DATA_BUS,
 
     /**
-     * Reg B := Data Bus
-     */
-    READ_REG_B_FROM_DATA_BUS,
-
-    /**
      * Reg A := Registers(Data Bus)
      *
      * Also clean Bus Mode
      */
     READ_REG_A_FROM_REG_BY_DATA_BUS,
+
+    /**
+     * Reg B := Data Bus
+     */
+    READ_REG_B_FROM_DATA_BUS,
+
+    /**
+     * Reg B := Reg(Data Bus)
+     */
+    READ_REG_B_FROM_REG_BY_DATA_BUS,
 
     /**
      * Reg Address Buffer := Registers(Data Bus)
@@ -370,6 +551,18 @@ private enum class SimpleAction: CpuAction {
      * Increase a value of Register A (specially for [CommandCode.DLY] command)
      */
     INC_REG_A,
+
+    /**
+     * Reg(Reg Address) := Reg B
+     */
+    WRITE_RESULT_TO_REG_BY_REG_ADDRESS,
+
+    /**
+     * Address Bus := Reg Address, Data Bus := Reg B, Mode := Write
+     *
+     * TICK
+     */
+    WRITE_RESULT_TO_MEMORY_BY_REG_ADDRESS,
 }
 
 private data class CommandExecution(val commandCode: CommandCode) : CpuAction

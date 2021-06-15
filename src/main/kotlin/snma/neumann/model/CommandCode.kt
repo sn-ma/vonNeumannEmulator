@@ -11,11 +11,15 @@ enum class CommandCode(
     DLY("Delay", "Wait A ticks", CommandType.READ_1_VALUE),
     MOV("Move", "B := A", CommandType.READ_1_VALUE_AND_WRITE_TO_2ND),
 
+    // TODO: check do we need signed and unsigned versions of operations
     ADD("Add", "B := B + A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
     SUB("Subtract", "B := B - A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
+    MUL("Multiply", "B := B * A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
+    DIV("Divide", "B := B / A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
 
     BAND("Bitwise and", "B := B & A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
     BOR("Bitwise or", "B := B | A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
+    // TODO: implement NOT (will need new CommandType)
 
     CMP("Compare",
         "Set control bits to 0 if A = B, to -1 if A < B and to 1 otherwise",
@@ -24,7 +28,9 @@ enum class CommandCode(
     JEQ("Jump if equal", commandType = CommandType.JUMP_CONDITIONAL),
     JNE("Jump if not equal", commandType = CommandType.JUMP_CONDITIONAL),
     JGT("Jump if greater", commandType = CommandType.JUMP_CONDITIONAL),
+    JGE("Jump if greater or equal", commandType = CommandType.JUMP_CONDITIONAL),
     JLW("Jump if lower", commandType = CommandType.JUMP_CONDITIONAL),
+    JLE("Jump if lower or equal", commandType = CommandType.JUMP_CONDITIONAL),
 
     JSR("Jump to subroutine", commandType = CommandType.JUMP_TO_SUBROUTINE),
     RET("Return from subroutine", commandType = CommandType.NO_ARGS),
