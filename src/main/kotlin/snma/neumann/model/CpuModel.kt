@@ -1,5 +1,7 @@
 package snma.neumann.model
 
+import javafx.beans.property.ReadOnlyObjectProperty
+import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.beans.property.SimpleObjectProperty
 import org.slf4j.LoggerFactory
 import snma.neumann.utils.CommonUtils
@@ -27,6 +29,12 @@ class CpuModel (
     enum class CommonStopMode: StopMode { NOT_STOPPED, HALTED }
     data class ErrorStopMode(val description: String): StopMode
 
+    private val currCommandPropertyRw = ReadOnlyObjectWrapper<Triple<CommandCode?, AddressingMode?, AddressingMode?>>(
+        Triple(null, null, null)
+    )
+    val currCommandProperty: ReadOnlyObjectProperty<Triple<CommandCode?, AddressingMode?, AddressingMode?>> =
+        currCommandPropertyRw.readOnlyProperty
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val actionsStack = MyStack<CpuAction>().apply { push(SimpleAction.START_READING_COMMAND) }
@@ -52,7 +60,7 @@ class CpuModel (
 
     override val memoryCells = registers.values
 
-    fun getOpenRegisterByIndex(index: Int): MemoryCellModel? {
+    private fun getOpenRegisterByIndex(index: Int): MemoryCellModel? {
         val allDescriptions = RegisterDescription.values()
         if (index !in allDescriptions.indices) {
             return null
@@ -70,6 +78,8 @@ class CpuModel (
         actionsStack.clear()
         actionsStack.push(SimpleAction.START_READING_COMMAND)
         isStopped = CommonStopMode.NOT_STOPPED
+
+        currCommandPropertyRw.value = Triple(null, null, null)
     }
 
     private fun setError(description: String) {
@@ -95,6 +105,7 @@ class CpuModel (
                     return
                 }
                 SimpleAction.START_READING_COMMAND -> {
+                    currCommandPropertyRw.value = Triple(null, null, null)
                     actionsStack.push(
                         SimpleAction.START_READING_COMMAND,
                         SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING,
@@ -160,6 +171,8 @@ class CpuModel (
                     } else {
                         null
                     }
+
+                    currCommandPropertyRw.value = Triple(commandCode, addressingModeA, addressingModeB)
 
                     if (commandIsConditionalJumpAndNotNeeded(commandCode)) {
                         registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue++

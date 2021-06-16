@@ -11,6 +11,8 @@ object Constants {
         const val MEMORY_CELLS_PER_ROW = 8
         const val FONT_SIZE_BIG = 20.0
         const val BUTTONS_SPACING = 5.0
+        const val HGAP = 10.0
+        const val TICK_PERIOD_DEFAULT = 50
     }
 
     object Utils {

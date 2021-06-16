@@ -5,7 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
-import snma.neumann.Defaults
+import snma.neumann.Constants
 import snma.neumann.model.CpuModel
 import snma.neumann.model.Simulation
 import tornadofx.getValue
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 class AppStateModel {
     val simulation = Simulation()
 
-    val tickPeriodProperty = SimpleIntegerProperty(Defaults.tickPeriod)
+    val tickPeriodProperty = SimpleIntegerProperty(Constants.View.TICK_PERIOD_DEFAULT)
     var tickPeriod by tickPeriodProperty
 
     val isRunningProperty = SimpleBooleanProperty(false).apply {
