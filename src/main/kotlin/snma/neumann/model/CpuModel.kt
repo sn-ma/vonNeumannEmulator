@@ -88,6 +88,7 @@ class CpuModel (
         while (true) {
             val currAction = actionsStack.poll()
             logger.info("Action {}, actions stack: {}", currAction, actionsStack)
+            @Suppress("REDUNDANT_ELSE_IN_WHEN") // "else" branch should be present even when "when" is exhaustive for the case of newly added commands
             when (currAction) {
                 null,
                 SimpleAction.TICK -> {
