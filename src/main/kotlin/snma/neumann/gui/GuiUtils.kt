@@ -90,8 +90,9 @@ object GuiUtils {
             maxWidth = prefWidth
 
             filterInput {
-                !it.text.isNullOrEmpty() ||
-                        it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' }
+                !it.text.isNullOrEmpty() &&
+                        it.text.uppercase().all{ ch -> ch in '0'..'9' || ch in 'A'..'F' || ch == ' ' } &&
+                        (it.controlNewText.replace(" ", "").length / 2.0) <= bytesCount.toDouble()
             }
 
             @Suppress("DEPRECATION")
