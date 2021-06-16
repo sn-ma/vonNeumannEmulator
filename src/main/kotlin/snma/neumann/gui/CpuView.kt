@@ -48,13 +48,13 @@ class CpuView(private val cpuModel: CpuModel) : View("CPU") {
                 text()
             }
             row {
-                addNameAndRegister(CpuModel.RegisterDescription.R_STACK_POINTER, true)
-            }
-            row {
                 addNameAndRegister(CpuModel.RegisterDescription.R_PROGRAM_COUNTER, true)
             }
             row {
                 addNameAndRegister(CpuModel.RegisterDescription.R_FLAGS, true)
+            }
+            row {
+                addNameAndRegister(CpuModel.RegisterDescription.R_STACK_POINTER, true)
             }
             row {
                 text()

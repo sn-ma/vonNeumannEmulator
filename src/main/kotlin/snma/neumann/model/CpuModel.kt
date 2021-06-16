@@ -46,9 +46,9 @@ class CpuModel (
     ) {
         R0, R1, R2, R3, R4, R5, R6, R7,
 
-        R_STACK_POINTER(regName = "Stack Pointer", type = MemoryCellModel.Type.ADDRESS_CELL),
         R_PROGRAM_COUNTER(regName = "Program Counter", type = MemoryCellModel.Type.ADDRESS_CELL),
         R_FLAGS(regName = "Flags", type = MemoryCellModel.Type.FLAGS_CELL),
+        R_STACK_POINTER(regName = "Stack Pointer", type = MemoryCellModel.Type.ADDRESS_CELL),
 
         R_A(regName = "A", isInternal = true),
         R_B(regName = "B", isInternal = true),
@@ -375,6 +375,10 @@ class CpuModel (
 
                     actionsStack.push(SimpleAction.CLEAN_BUS_MODE, SimpleAction.TICK)
                 }
+                SimpleAction.FINISH_RET -> {
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue = busModel.dataBus.intValue
+                    busModel.modeBus.value = BusModel.Mode.IDLE
+                }
                 is CommandExecution -> {
                     check(currAction.commandCode.commandType != CommandCode.CommandType.JUMP_CONDITIONAL) {
                         "Conditional jumps should be processed on command code just read"
@@ -438,6 +442,24 @@ class CpuModel (
                         CommandCode.JMP -> {
                             registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue =
                                 registers[RegisterDescription.R_ADDRESS]!!.intValue
+                        }
+
+                        CommandCode.JSR -> {
+                            busModel.addressBus.intValue = registers[RegisterDescription.R_STACK_POINTER]!!.intValue
+                            busModel.dataBus.intValue = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue
+                            busModel.modeBus.value = BusModel.Mode.WRITE
+                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.intValue =
+                                registers[RegisterDescription.R_ADDRESS]!!.intValue
+                            registers[RegisterDescription.R_STACK_POINTER]!!.intValue--
+                            actionsStack.push(SimpleAction.CLEAN_BUS_MODE, SimpleAction.TICK)
+                        }
+
+                        CommandCode.RET -> {
+                            registers[RegisterDescription.R_STACK_POINTER]!!.intValue++
+                            busModel.addressBus.intValue = registers[RegisterDescription.R_STACK_POINTER]!!.intValue
+                            busModel.modeBus.value = BusModel.Mode.READ
+
+                            actionsStack.push(SimpleAction.FINISH_RET, SimpleAction.TICK)
                         }
                         else -> TODO("Command ${currAction.commandCode} is not yet implemented")
                     }
@@ -581,6 +603,13 @@ private enum class SimpleAction: CpuAction {
      * TICK
      */
     WRITE_RESULT_TO_MEMORY_BY_REG_ADDRESS,
+
+    /**
+     * Stack Pointer := Data Bus
+     *
+     * Also clean Bus Mode
+     */
+    FINISH_RET,
 }
 
 private data class CommandExecution(val commandCode: CommandCode) : CpuAction
