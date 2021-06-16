@@ -72,14 +72,13 @@ class CpuView(private val cpuModel: CpuModel) : View("CPU") {
                         val (commandCode, addressingModeA, addressingModeB) = triple
                         append("Command:\n")
                         append(commandCode?.name ?: "-")
-                        if (addressingModeA != null || addressingModeB != null) {
-                            append("(")
-                            addressingModeA?.let { append(it.name) }
-                            if (addressingModeA != null && addressingModeB != null) {
-                                append(", ")
-                            }
-                            addressingModeB?.let { append(it.name) }
-                            append(")")
+                        addressingModeA?.let {
+                            append(' ')
+                            append(it.shortRepresentation)
+                        }
+                        addressingModeB?.let {
+                            append(' ')
+                            append(it.shortRepresentation)
                         }
                     }
                 }).gridpaneConstraints { columnSpan = 4 }

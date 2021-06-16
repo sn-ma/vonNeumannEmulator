@@ -7,11 +7,11 @@ import snma.neumann.utils.CommonUtils.countValuableBits
  * Addressing mode for operands are coded by the last bits of the command word.
  * To get addressing mode, use function [AddressingMode.parse]
  */
-enum class AddressingMode {
-    CONSTANT,
-    REGISTER,
-    DIRECT,
-    REGISTER_INDIRECT,
+enum class AddressingMode(val shortRepresentation: String) {
+    CONSTANT("CONST"),
+    REGISTER("REG"),
+    DIRECT("DIR"),
+    REGISTER_INDIRECT("(REG)"),
     ;
 
     private val bitmask: Int get() = ordinal
