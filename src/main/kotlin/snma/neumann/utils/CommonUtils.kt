@@ -1,4 +1,4 @@
-package snma.neumann
+package snma.neumann.utils
 
 object CommonUtils {
     fun Int.countValuableBits(): Int = if (this == 0) 0 else toString(2).length
@@ -36,5 +36,15 @@ object CommonUtils {
             .replace(leadingZeroesRE, """$1""")
         return if (replacedStr.isEmpty()) 0
         else replacedStr.toIntOrNull(16)
+    }
+
+    fun intToShortPrefixedHexString(int: Int): String = if (int < 0) "-" + intToShortPrefixedHexString(-int) else
+        "0x${int.toString(16).uppercase()}"
+
+    fun prefixedStringToInt(str: String): Int? = when {
+        str.startsWith("-") -> prefixedStringToInt(str.substring(1))?.let { -it }
+        str.startsWith("0x") -> str.substring(2).toIntOrNull(16)
+        str.startsWith("0b") -> str.substring(2).toIntOrNull(2)
+        else -> str.toIntOrNull()
     }
 }

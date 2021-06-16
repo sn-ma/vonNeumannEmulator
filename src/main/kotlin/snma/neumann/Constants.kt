@@ -12,4 +12,11 @@ object Constants {
         const val FONT_SIZE_BIG = 20.0
         const val BUTTONS_SPACING = 5.0
     }
+
+    object Utils {
+        object Saver { // Remember to fix tests when editing this values
+            const val REMOVE_EMPTY_CELLS_MIN_COUNT = 8
+            const val MAX_CELLS_IN_LINE = 16
+        }
+    }
 }

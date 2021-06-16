@@ -1,7 +1,7 @@
 package snma.neumann.model
 
-import snma.neumann.CommonUtils.countValuableBits
 import snma.neumann.Constants
+import snma.neumann.utils.CommonUtils.countValuableBits
 
 abstract class PeripheralHardwareItem(
     busModel: BusModel,

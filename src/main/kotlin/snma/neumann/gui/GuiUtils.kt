@@ -16,12 +16,12 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.util.StringConverter
 import javafx.util.converter.NumberStringConverter
-import snma.neumann.CommonUtils
 import snma.neumann.Constants
 import snma.neumann.model.AbstractCellModel
 import snma.neumann.model.EnumCellModel
 import snma.neumann.model.HardwareItem
 import snma.neumann.model.MemoryCellModel
+import snma.neumann.utils.CommonUtils
 import tornadofx.*
 import kotlin.reflect.KProperty1
 

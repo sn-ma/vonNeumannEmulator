@@ -1,7 +1,7 @@
 package snma.neumann.model
 
-import snma.neumann.CommonUtils.countValuableBits
 import snma.neumann.Constants
+import snma.neumann.utils.CommonUtils.countValuableBits
 
 /**
  * Addressing mode for operands are coded by the last bits of the command word.

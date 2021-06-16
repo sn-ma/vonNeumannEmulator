@@ -2,7 +2,7 @@ package snma.neumann.model
 
 import javafx.beans.property.SimpleObjectProperty
 import org.slf4j.LoggerFactory
-import snma.neumann.CommonUtils
+import snma.neumann.utils.CommonUtils
 import tornadofx.getValue
 import tornadofx.setValue
 import kotlin.math.sign

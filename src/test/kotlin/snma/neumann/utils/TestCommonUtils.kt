@@ -1,9 +1,12 @@
-package snma.neumann
+package snma.neumann.utils
 
 import org.junit.jupiter.api.Test
-import snma.neumann.CommonUtils.countValuableBits
-import snma.neumann.CommonUtils.hexStringToInt
-import snma.neumann.CommonUtils.intToHexString
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import snma.neumann.utils.CommonUtils.countValuableBits
+import snma.neumann.utils.CommonUtils.hexStringToInt
+import snma.neumann.utils.CommonUtils.intToHexString
+import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
@@ -64,5 +67,44 @@ class TestCommonUtils {
             assertEquals(expected, actual,
                 "Wrong conversion result for '$stringValue'")
         }
+    }
+
+    companion object {
+        data class SampleIntToPrefHex(val int: Int, val expected: String)
+
+        @JvmStatic
+        @Suppress("unused")
+        fun genIntToPrefixedStringsData(): Stream<SampleIntToPrefHex> = Stream.of(
+            SampleIntToPrefHex(0, "0x0"),
+            SampleIntToPrefHex(0x11, "0x11"),
+            SampleIntToPrefHex(-0x101, "-0x101"),
+        )
+
+        data class SamplePrefStringToInt(val string: String, val expected: Int)
+
+        @JvmStatic
+        @Suppress("unused")
+        fun getPrefStringToIntData(): Stream<SamplePrefStringToInt> = Stream.of(
+            SamplePrefStringToInt("0x123", 0x123),
+            SamplePrefStringToInt("-0x123", -0x123),
+            SamplePrefStringToInt("-0x0", 0),
+            SamplePrefStringToInt("0b101", 0b101),
+            SamplePrefStringToInt("-0b101", -0b101),
+            SamplePrefStringToInt("1234", 1234),
+            SamplePrefStringToInt("-1234", -1234),
+            SamplePrefStringToInt("0", 0),
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("genIntToPrefixedStringsData")
+    fun intToShortPrefixedHexString(sample: SampleIntToPrefHex) {
+        assertEquals(sample.expected, CommonUtils.intToShortPrefixedHexString(sample.int))
+    }
+
+    @ParameterizedTest
+    @MethodSource("getPrefStringToIntData")
+    fun prefixedStringToInt(sample: SamplePrefStringToInt) {
+        assertEquals(sample.expected, CommonUtils.prefixedStringToInt(sample.string))
     }
 }

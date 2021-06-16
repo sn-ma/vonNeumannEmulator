@@ -1,0 +1,19 @@
+# This program computes the factorial of the value, which it finds in R0, and stores it to R1
+
+# Variables:
+# R0 -- input number
+# R1 -- output
+# R2 -- temporal multiplier
+
+0x00: 0x0201, 1, 1  # MOV 1 R1
+0x03: 0x0211, 0, 2  # MOV R0 R2
+
+# Main Loop
+0x06: 0x0A01, 1, 2  # CMP 1 R2
+0x09: 0x0F00, 0x13  # JGE Clearing
+0x0B: 0x0511, 2, 1  # MUL R2 R1
+0x0E: 0x0401, 1, 2  # SUB 1 R2
+0x11: 0x0B00, 0x06  # JMP Main Loop
+
+# Clearing
+0x13: 0x0201, 0, 2  # MOV 0 R2
