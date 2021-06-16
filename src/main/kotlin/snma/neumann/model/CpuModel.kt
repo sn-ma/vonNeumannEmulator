@@ -36,7 +36,7 @@ class CpuModel (
         val isInternal: Boolean = false,
         val type: MemoryCellModel.Type = MemoryCellModel.Type.DATA_CELL,
     ) {
-        R0, R1, R2, R3, R4, R5, R6, R7, R8,
+        R0, R1, R2, R3, R4, R5, R6, R7,
 
         R_STACK_POINTER(regName = "Stack Pointer", type = MemoryCellModel.Type.ADDRESS_CELL),
         R_PROGRAM_COUNTER(regName = "Program Counter", type = MemoryCellModel.Type.ADDRESS_CELL),
