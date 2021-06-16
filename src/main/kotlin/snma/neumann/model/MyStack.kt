@@ -2,6 +2,9 @@ package snma.neumann.model
 
 import java.util.*
 
+/**
+ * Just a thin wrapper around the [LinkedList] -- to avoid using a wrong methods
+ */
 class MyStack<T> {
     private val deque: Deque<T> = LinkedList()
 
