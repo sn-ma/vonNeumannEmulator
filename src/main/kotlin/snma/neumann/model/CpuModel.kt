@@ -410,6 +410,10 @@ class CpuModel (
                             registers[RegisterDescription.R_B]!!.intValue =
                                 registers[RegisterDescription.R_B]!!.intValue or registers[RegisterDescription.R_A]!!.intValue
                         }
+                        CommandCode.BNOT -> {
+                            registers[RegisterDescription.R_B]!!.intValue =
+                                registers[RegisterDescription.R_A]!!.intValue.inv()
+                        }
 
                         CommandCode.CMP -> {
                             registers[RegisterDescription.R_FLAGS]!!.intValue =

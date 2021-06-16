@@ -19,7 +19,7 @@ enum class CommandCode(
 
     BAND("Bitwise and", "B := B & A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
     BOR("Bitwise or", "B := B | A", CommandType.READ_2_VALUES_AND_WRITE_TO_2ND),
-    // TODO: implement NOT (will need new CommandType)
+    BNOT("Bitwise not", "B := !A", CommandType.READ_1_VALUE_AND_WRITE_TO_2ND),
 
     CMP("Compare",
         "Set control bits to 0 if A = B, to -1 if A < B and to 1 otherwise",
