@@ -1,0 +1,32 @@
+# This program RECURSIVELY computes the factorial of the value, which it finds in R0, and stores it to R1
+
+# Used addresses:
+# R0 -- input number (should be initialized from outside of this program)
+# R1 -- output number and return value of the subroutine
+# R2 -- argument of called subroutine
+# R3 -- pointer to local variables stack
+# 0x7F and lower -- local variables stack
+# 0xFF and lower -- callstack
+
+# Initialization
+0x00: 0x0201, 0x7F, 3   # MOV 0x7F R3
+0x03: 0x0201, 0xFF, 10  # MOV 0xFF R10
+
+# Call the function
+0x06: 0x0211, 0, 2  # MOV R0 R2
+0x09: 0x1200, 0x0C  # JSR Subroutine
+0x0B: 0x0000        # HLT
+
+# Subroutine
+0x0C: 0x0A01, 1, 2  # CMP 1 R2
+0x0F: 0x1000, 0x15  # JLW Branch2
+0x11: 0x0201, 1, 1  # MOV 1 R1
+0x14: 0x1300        # RET
+# Branch2:
+0x15: 0x0213, 2, 3  # MOV R2 (R3)
+0x18: 0x0401, 1, 3  # SUB 1 R3
+0x1B: 0x0401, 1, 2  # SUB 1 R2
+0x1E: 0x1200, 0x0C  # JSR Subroutine
+0x20: 0x0301, 1, 3  # ADD 1 R3
+0x23: 0x0531, 3, 1  # MUL (R3) R1
+0x26: 0x1300        # RET
