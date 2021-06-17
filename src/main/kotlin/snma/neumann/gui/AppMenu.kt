@@ -1,12 +1,16 @@
 package snma.neumann.gui
 
 import javafx.geometry.Pos
+import jfxtras.styles.jmetro.JMetro
+import jfxtras.styles.jmetro.Style
 import snma.neumann.Constants
 import snma.neumann.gui.GuiUtils.positiveIntTextField
 import tornadofx.*
 
 class AppMenu: View() {
     private val appStateModel = (app as MyApp).appStateModel
+
+    private val helpView by lazy { HelpView() }
 
     override val root = hbox {
         alignment = Pos.CENTER
@@ -38,9 +42,8 @@ class AppMenu: View() {
             enableWhen(appStateModel.isRunningProperty.not())
         }
         label("ms")
-    }
-}
+        spacer { minWidth = 10.0 }
 
-private class TickPeriodViewModel(stateModel: AppStateModel): ItemViewModel<AppStateModel>(stateModel) {
-    val tickPeriod = bind(AppStateModel::tickPeriodProperty)
+        button("Help").action { JMetro(helpView.openWindow()?.scene, Style.DARK) }
+    }
 }

@@ -32,21 +32,21 @@ enum class CommandCode(
     JLW("Jump if lower", commandType = CommandType.JUMP_CONDITIONAL),
     JLE("Jump if lower or equal", commandType = CommandType.JUMP_CONDITIONAL),
 
-    JSR("Jump to subroutine", commandType = CommandType.JUMP_TO_SUBROUTINE),
-    RET("Return from subroutine", commandType = CommandType.NO_ARGS),
+    JSR("Jump to subroutine", "(SP--) := PC, PC := A", CommandType.JUMP_TO_SUBROUTINE),
+    RET("Return from subroutine", "PC := (++SP)", CommandType.NO_ARGS),
     ;
 
-    val code get() = name
+    val stringCode get() = name
 
-    enum class CommandType(val argsCount: Int) {
-        NO_ARGS(0),
-        READ_1_VALUE(1),
-        READ_1_VALUE_AND_WRITE_TO_2ND(2),
-        READ_2_VALUES(2),
-        READ_2_VALUES_AND_WRITE_TO_2ND(2),
-        JUMP_NON_CONDITIONAL(1),
-        JUMP_CONDITIONAL(1),
-        JUMP_TO_SUBROUTINE(1),
+    enum class CommandType(val argsCount: Int, val description: String) {
+        NO_ARGS(0, "Requires no args"),
+        READ_1_VALUE(1, "Only reads one value"),
+        READ_1_VALUE_AND_WRITE_TO_2ND(2, "Reads one value and writes to address of the second"),
+        READ_2_VALUES(2, "Only read two values"),
+        READ_2_VALUES_AND_WRITE_TO_2ND(2, "Reads two values and writes to the second"),
+        JUMP_NON_CONDITIONAL(1, "Non-conditional jump to given address"),
+        JUMP_CONDITIONAL(1, "Conditional jump to given address"),
+        JUMP_TO_SUBROUTINE(1, "Jump to subroutine"),
         ;
 
         init {
