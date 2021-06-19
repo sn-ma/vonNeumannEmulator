@@ -169,7 +169,7 @@ object MySwingTools {
             .distinctUntilChanged()
             .subscribeOn(scheduler)
             .subscribe { wasRecentlyModified ->
-                background = if (wasRecentlyModified) Color(0x3e1900) else null
+                background = if (wasRecentlyModified) Color(0x744500) else null
             }
     }
 

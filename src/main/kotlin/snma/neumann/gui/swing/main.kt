@@ -1,6 +1,6 @@
 package snma.neumann.gui.swing
 
-import com.formdev.flatlaf.FlatDarkLaf
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerContrastIJTheme
 import net.miginfocom.swing.MigLayout
 import org.slf4j.bridge.SLF4JBridgeHandler
 import snma.neumann.gui.basics.AppViewStateModel
@@ -18,8 +18,7 @@ fun main() {
     val appViewStateModel = AppViewStateModel(MySwingTools.scheduler)
 
     SwingUtilities.invokeLater { // because some widgets are updating only on Swing thread
-
-        FlatDarkLaf.setup()
+        FlatMaterialDarkerContrastIJTheme.setup()
 
         JFrame("von Neumann machine emulator").apply {
             minimumSize = Dimension(600, 300)
