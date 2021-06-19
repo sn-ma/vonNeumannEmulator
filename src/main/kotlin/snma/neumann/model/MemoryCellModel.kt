@@ -1,30 +1,15 @@
 package snma.neumann.model
 
-import javafx.beans.property.IntegerProperty
-import javafx.beans.property.SimpleIntegerProperty
 import snma.neumann.Constants
-import tornadofx.getValue
-import tornadofx.setValue
 import kotlin.math.ceil
-
 
 class MemoryCellModel(
     val type: Type
-) : AbstractCellModel<Number>(0) {
-    override val valueProperty: IntegerProperty = object : SimpleIntegerProperty(0) {
-        override fun set(newValue: Int) {
-            super.set(newValue and type.bitmask)
-            wasRecentlyModifiedPropertyRW.set(true)
-        }
-    }
-    @Deprecated("Not for real use: use intValue")
-    override var value: Number by valueProperty
-
-    @Suppress("DEPRECATION")
-    var intValue: Int
-        get() = value.toInt()
+) : AbstractCellModel<Int>(0) {
+    var safeValue: Int // TODO: try to get rid of it
+        get() = value
         set(value) {
-            this.value = value
+            this.value = value and type.bitmask
         }
 
     enum class Type(val bitsCount: Int) {
@@ -35,5 +20,14 @@ class MemoryCellModel(
 
         val bytesCount = ceil(bitsCount / 8.0).toInt()
         val bitmask = (-1 shl bitsCount).inv()
+    }
+
+    init {
+        valueBehaviorSubject.subscribe { newValue ->
+            val fixedValue = newValue and type.bitmask
+            if (fixedValue != newValue) {
+                valueBehaviorSubject.onNext(fixedValue)
+            }
+        }
     }
 }

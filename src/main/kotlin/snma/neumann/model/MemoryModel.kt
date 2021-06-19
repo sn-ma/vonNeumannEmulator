@@ -13,10 +13,10 @@ class MemoryModel (
     }
 
     override fun read(address: Int): Int {
-        return getRequiredMemoryCellByAddress(address).intValue
+        return getRequiredMemoryCellByAddress(address).safeValue
     }
 
     override fun write(address: Int, value: Int) {
-        getRequiredMemoryCellByAddress(address).intValue = value
+        getRequiredMemoryCellByAddress(address).safeValue = value
     }
 }

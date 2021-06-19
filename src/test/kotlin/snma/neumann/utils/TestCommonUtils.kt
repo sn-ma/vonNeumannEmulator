@@ -8,7 +8,6 @@ import snma.neumann.utils.CommonUtils.hexStringToInt
 import snma.neumann.utils.CommonUtils.intToHexString
 import java.util.stream.Stream
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 
 
 class TestCommonUtils {
@@ -44,13 +43,6 @@ class TestCommonUtils {
     }
 
     @Test
-    fun `intToHexString fails`() {
-        assertFails {
-            intToHexString(0x0123, 1)
-        }
-    }
-
-    @Test
     fun `hexStringToInt works`() {
         listOf(
             null to null,
@@ -62,8 +54,9 @@ class TestCommonUtils {
             "Q" to null,
             "03" to 3,
             "0F" to 0x0F,
+            "0F FF FF" to null,
         ).forEach { (stringValue, expected) ->
-            val actual = hexStringToInt(stringValue)
+            val actual = hexStringToInt(stringValue, 2)
             assertEquals(expected, actual,
                 "Wrong conversion result for '$stringValue'")
         }

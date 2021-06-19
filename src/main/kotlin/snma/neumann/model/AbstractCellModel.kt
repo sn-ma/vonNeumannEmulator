@@ -1,23 +1,31 @@
 package snma.neumann.model
 
-import javafx.beans.property.Property
-import javafx.beans.property.ReadOnlyBooleanProperty
-import javafx.beans.property.ReadOnlyBooleanWrapper
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.subjects.BehaviorSubject
+import snma.neumann.utils.rx.getValue
+import snma.neumann.utils.rx.setValue
 
 abstract class AbstractCellModel<T: Any>(private val defaultValue: T) {
-    abstract val valueProperty: Property<T>
-    abstract var value: T
+    val valueBehaviorSubject: BehaviorSubject<T> = BehaviorSubject.createDefault(defaultValue)
+    var value: T by valueBehaviorSubject
 
-    protected val wasRecentlyModifiedPropertyRW = ReadOnlyBooleanWrapper(false)
-    val wasRecentlyModifiedProperty: ReadOnlyBooleanProperty = wasRecentlyModifiedPropertyRW.readOnlyProperty
-    val wasRecentlyModified get() = wasRecentlyModifiedProperty.get()
+    private val wasRecentlyModifiedBehaviorSubject: BehaviorSubject<Boolean> = BehaviorSubject.createDefault(false)
+    val wasRecentlyModifiedObservable: Observable<Boolean> get() = wasRecentlyModifiedBehaviorSubject
+    var wasRecentlyModified: Boolean by wasRecentlyModifiedBehaviorSubject
+        private set
 
     fun cleanWasRecentlyModified() {
-        wasRecentlyModifiedPropertyRW.set(false)
+        wasRecentlyModified = false
     }
 
     fun reset() {
         value = defaultValue
-        wasRecentlyModifiedPropertyRW.set(false)
+        cleanWasRecentlyModified()
+    }
+
+    init {
+        valueBehaviorSubject.skip(1).subscribe {
+            wasRecentlyModified = true
+        }
     }
 }

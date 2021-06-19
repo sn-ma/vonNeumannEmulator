@@ -7,8 +7,8 @@ import java.io.File
 object MemoryModelSaver {
     @Deprecated("Supposed to be used only in this object and in tests")
     fun calculateNotEmptyRanges(memoryModel: MemoryModel): List<IntRange> {
-        val emptyPredicate: (Int) -> Boolean = { memoryModel.getRequiredMemoryCellByAddress(it).intValue == 0 }
-        val notEmptyPredicate: (Int) -> Boolean = { memoryModel.getRequiredMemoryCellByAddress(it).intValue != 0 }
+        val emptyPredicate: (Int) -> Boolean = { memoryModel.getRequiredMemoryCellByAddress(it).safeValue == 0 }
+        val notEmptyPredicate: (Int) -> Boolean = { memoryModel.getRequiredMemoryCellByAddress(it).safeValue != 0 }
 
         val firstNotEmptyCell = memoryModel.addressRange.firstOrNull(notEmptyPredicate) ?: return emptyList()
         val lastNotEmptyCell = memoryModel.addressRange.last(notEmptyPredicate)
@@ -58,7 +58,7 @@ object MemoryModelSaver {
                 writer.print(": ")
                 val dataSequence = range.asSequence()
                     .map { CommonUtils.intToShortPrefixedHexString(
-                        memoryModel.getRequiredMemoryCellByAddress(it).intValue) }
+                        memoryModel.getRequiredMemoryCellByAddress(it).safeValue) }
                 writer.println(dataSequence.joinToString(","))
             }
         }

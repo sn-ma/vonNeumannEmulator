@@ -10,7 +10,8 @@ object CommonUtils {
         if (zeroesToAdd > 0) {
             answ = "0".repeat(zeroesToAdd) + answ
         } else if (zeroesToAdd < 0) {
-            error("$intVal is more than $bytesCount byte(s)!")
+//            error("$intVal is more than $bytesCount byte(s)!")
+            return null
         }
         val charIterator = answ.iterator()
         return buildString {
@@ -28,14 +29,15 @@ object CommonUtils {
 
     private val leadingZeroesRE = """^0+([^0]*[\dA-Z])$""".toRegex()
 
-    fun hexStringToInt(str: String?): Int? {
+    fun hexStringToInt(str: String?, bytesCount: Int): Int? {
         if (str.isNullOrEmpty()) return null
         val replacedStr = str
             .replace(" ", "")
             .uppercase()
             .replace(leadingZeroesRE, """$1""")
-        return if (replacedStr.isEmpty()) 0
-        else replacedStr.toIntOrNull(16)
+        if (replacedStr.length / 2.0 > bytesCount) return null
+        if (replacedStr.startsWith("-")) return null
+        return replacedStr.toIntOrNull(16)
     }
 
     fun intToShortPrefixedHexString(int: Int): String = if (int < 0) "-" + intToShortPrefixedHexString(-int) else
@@ -47,4 +49,6 @@ object CommonUtils {
         str.startsWith("0b") -> str.substring(2).toIntOrNull(2)
         else -> str.toIntOrNull()
     }
+
+    data class Holder<T>(var value: T)
 }
