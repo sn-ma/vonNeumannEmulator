@@ -8,6 +8,7 @@ import snma.neumann.model.AbstractCellModel
 import snma.neumann.model.EnumCellModel
 import snma.neumann.model.MemoryCellModel
 import snma.neumann.utils.CommonUtils
+import snma.neumann.utils.rx.FilteredBehaviorSubject
 import java.awt.Color
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -38,6 +39,7 @@ object MySwingTools {
         textField.bindBidirectional(behaviorSubject)
         textField.bindIsEnabled(isEditableObservable)
         textField.setupLooseFocus()
+        textField.toolTipText = "Decimal value"
         return textField
     }
 
@@ -59,12 +61,32 @@ object MySwingTools {
         })
     }
 
+    private fun<T: Any> JFormattedTextField.bindBidirectional(behaviorSubject: FilteredBehaviorSubject<T>) {
+        behaviorSubject.observable.subscribeOn(scheduler).subscribe { valueFromBS ->
+            if (this.value != valueFromBS) {
+                this.value = valueFromBS
+            }
+        }
+        val wasInitialized = CommonUtils.Holder(false)
+        addPropertyChangeListener("value") {
+            if (wasInitialized.value) { // Hack to prevent value to be marked as changed on init
+                @Suppress("UNCHECKED_CAST")
+                val value = this.value as T?
+                if (value == null) {
+                    this.value = behaviorSubject.value // Rollback the value if it was entered invalid
+                } else if (value != behaviorSubject.value) {
+                    behaviorSubject.onNext(value)
+                }
+            } else {
+                wasInitialized.value = true
+            }
+        }
+    }
+
     private fun<T: Any> JFormattedTextField.bindBidirectional(behaviorSubject: BehaviorSubject<T>) {
         behaviorSubject.subscribeOn(scheduler).subscribe { valueFromBS ->
-            if (formatter.stringToValue(formatter.valueToString(valueFromBS)) == valueFromBS) { // If the value is correct
-                if (this.value != valueFromBS) {
-                    this.value = valueFromBS
-                }
+            if (this.value != valueFromBS) {
+                this.value = valueFromBS
             }
         }
         val wasInitialized = CommonUtils.Holder(false)
@@ -101,7 +123,7 @@ object MySwingTools {
 
     inline fun <reified T: Enum<T>> createEnumCellComboBox(enumCellModel: EnumCellModel<T>): JComboBox<T> {
         val comboBox = JComboBox(enumValues<T>())
-        enumCellModel.valueBehaviorSubject.subscribeOn(scheduler).subscribe { value ->
+        enumCellModel.valueBehaviorSubject.observable.subscribeOn(scheduler).subscribe { value ->
             comboBox.selectedItem = value
         }
         val isInitialized = CommonUtils.Holder(false)

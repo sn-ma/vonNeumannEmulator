@@ -50,5 +50,14 @@ object CommonUtils {
         else -> str.toIntOrNull()
     }
 
+    fun intToBinaryString(value: Int, bitsCount: Int): String {
+        var answer = value.toString(2)
+        val zeroesRequired = bitsCount - answer.length
+        if (zeroesRequired > 0) {
+            answer = "0".repeat(zeroesRequired)
+        }
+        return answer
+    }
+
     data class Holder<T>(var value: T)
 }
