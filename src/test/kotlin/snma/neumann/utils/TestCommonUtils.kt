@@ -34,6 +34,7 @@ class TestCommonUtils {
             IntToHexStringParams(0, 3, "00 00 00"),
             IntToHexStringParams(0x012345, 3, "01 23 45"),
             IntToHexStringParams(0x0abbee, 3, "0A BB EE"),
+            IntToHexStringParams(0x0123, 2, "01 23"),
         ).forEach { (intVal, bytesCount, expected) ->
             val actual = intToHexString(intVal, bytesCount)
             assertEquals(expected, actual,

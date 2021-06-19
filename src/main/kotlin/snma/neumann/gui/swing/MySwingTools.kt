@@ -127,7 +127,7 @@ object MySwingTools {
                 }
                 append("Binary value: ${CommonUtils.intToBinaryString(value, memoryCellModel.type.bitsCount)}\n")
                 append("Decimal value: $value\n")
-                append("Hex. value: ${textField.text}")
+                append("Hex. value: ${formatter.valueToString(value)}")
             }
         }
 
