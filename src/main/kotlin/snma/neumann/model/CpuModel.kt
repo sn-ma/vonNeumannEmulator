@@ -50,7 +50,6 @@ class CpuModel (
 
         R_A(regName = "A", isInternal = true),
         R_B(regName = "B", isInternal = true),
-        R_CMD(regName = "Command", isInternal = true),
         R_ADDRESS(regName = "Address Buffer", isInternal = true, type = MemoryCellModel.Type.ADDRESS_CELL),
     }
 
@@ -139,7 +138,6 @@ class CpuModel (
                 }
                 SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING -> {
                     val cmdWordRead = busModel.dataBus.safeValue
-                    registers[RegisterDescription.R_CMD]!!.safeValue = cmdWordRead
 
                     // Calculate command code and addressing modes
                     var commandCode = CommandCode.parse(cmdWordRead)
