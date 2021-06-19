@@ -51,7 +51,11 @@ class MemoryViewFactory(model: MemoryModel): ComponentViewFactory<MemoryModel>("
         addButton("Save") {
             if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 try {
-                    MemoryModelSaver.save(model, fileChooser.selectedFile)
+                    var selectedFile = fileChooser.selectedFile
+                    if (selectedFile.extension != "neumann") {
+                        selectedFile = File(selectedFile.path + ".neumann")
+                    }
+                    MemoryModelSaver.save(model, selectedFile)
                     JOptionPane.showMessageDialog(this, "Successfully saved")
                 } catch (ex: Exception) {
                     JOptionPane.showMessageDialog(
