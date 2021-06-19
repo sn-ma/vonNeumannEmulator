@@ -105,7 +105,7 @@ object MySwingTools {
         }
     }
 
-    fun createMemoryCellTextField(memoryCellModel: MemoryCellModel): JFormattedTextField {
+    fun createMemoryCellTextField(memoryCellModel: MemoryCellModel, tooltipText: String? = null): JFormattedTextField {
         val bytesCount = memoryCellModel.type.bytesCount
         val formatter = object : JFormattedTextField.AbstractFormatter() {
             override fun stringToValue(string: String?): Int? = CommonUtils.hexStringToInt(string, bytesCount)
@@ -118,6 +118,19 @@ object MySwingTools {
         textField.bindBidirectional(memoryCellModel.valueBehaviorSubject)
         textField.bindWasRecentlyModified(memoryCellModel)
         textField.setupLooseFocus()
+
+        memoryCellModel.valueBehaviorSubject.observable.subscribeOn(scheduler).subscribe { value ->
+            textField.toolTipText = buildString {
+                if (tooltipText != null) {
+                    append(tooltipText)
+                    append("\n\n")
+                }
+                append("Binary value: ${CommonUtils.intToBinaryString(value, memoryCellModel.type.bitsCount)}\n")
+                append("Decimal value: $value\n")
+                append("Hex. value: ${textField.text}")
+            }
+        }
+
         return textField
     }
 

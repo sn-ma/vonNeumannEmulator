@@ -26,9 +26,8 @@ class MemoryViewFactory(model: MemoryModel): ComponentViewFactory<MemoryModel>("
         val rowsCount = ceil(model.addressRange.count() / Constants.View.MEMORY_CELLS_PER_ROW.toDouble()).toInt()
         val panel = JPanel(MigLayout("ins 0, wrap ${Constants.View.MEMORY_CELLS_PER_ROW + 1}")).apply {
             fun addMemCell(address: Int) {
-                add(MySwingTools.createMemoryCellTextField(model.getRequiredMemoryCellByAddress(address)).apply {
-                    toolTipText = "Address: ${CommonUtils.intToHexString(address, MemoryCellModel.Type.ADDRESS_CELL.bytesCount)}"
-                })
+                add(MySwingTools.createMemoryCellTextField(model.getRequiredMemoryCellByAddress(address),
+                    "Address: ${CommonUtils.intToHexString(address, MemoryCellModel.Type.ADDRESS_CELL.bytesCount)}"))
             }
             val addressIterator = model.addressRange.iterator()
             for (rowIdx in 0 until rowsCount) {

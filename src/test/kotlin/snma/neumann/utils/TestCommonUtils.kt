@@ -87,6 +87,15 @@ class TestCommonUtils {
             SamplePrefStringToInt("-1234", -1234),
             SamplePrefStringToInt("0", 0),
         )
+
+        data class SampleIntToBinaryString(val int: Int, val bitsCount: Int, val expected: String)
+
+        @JvmStatic
+        @Suppress("unused")
+        fun getIntToBinaryString(): Stream<SampleIntToBinaryString> = Stream.of(
+            SampleIntToBinaryString(0, 3, "000"),
+            SampleIntToBinaryString(10, 8, "0000 1010"),
+        )
     }
 
     @ParameterizedTest
@@ -99,5 +108,11 @@ class TestCommonUtils {
     @MethodSource("getPrefStringToIntData")
     fun prefixedStringToInt(sample: SamplePrefStringToInt) {
         assertEquals(sample.expected, CommonUtils.prefixedStringToInt(sample.string))
+    }
+
+    @ParameterizedTest
+    @MethodSource("getIntToBinaryString")
+    fun intToBinaryString(sample: SampleIntToBinaryString) {
+        assertEquals(sample.expected, CommonUtils.intToBinaryString(sample.int, sample.bitsCount))
     }
 }

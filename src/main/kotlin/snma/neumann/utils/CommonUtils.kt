@@ -1,6 +1,10 @@
 package snma.neumann.utils
 
+import org.slf4j.LoggerFactory
+
 object CommonUtils {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun Int.countValuableBits(): Int = if (this == 0) 0 else toString(2).length
 
     fun intToHexString(intVal: Int?, bytesCount: Int): String? {
@@ -10,7 +14,7 @@ object CommonUtils {
         if (zeroesToAdd > 0) {
             answ = "0".repeat(zeroesToAdd) + answ
         } else if (zeroesToAdd < 0) {
-//            error("$intVal is more than $bytesCount byte(s)!")
+            logger.error("$intVal is more than $bytesCount byte(s)!")
             return null
         }
         val charIterator = answ.iterator()
@@ -54,9 +58,22 @@ object CommonUtils {
         var answer = value.toString(2)
         val zeroesRequired = bitsCount - answer.length
         if (zeroesRequired > 0) {
-            answer = "0".repeat(zeroesRequired)
+            answer = "0".repeat(zeroesRequired) + answer
+        } else if (zeroesRequired < 0) {
+            logger.error("Too big number to transform in binary form: $value, it should be $bitsCount bits")
         }
-        return answer
+        val reversedAnswer = buildString {
+            var counter = 0
+            for (i in (answer.length - 1) downTo 0) {
+                append(answer[i])
+                counter++
+                if (counter == 4 && i != 0) {
+                    append(' ')
+                    counter = 0
+                }
+            }
+        }
+        return reversedAnswer.reversed()
     }
 
     data class Holder<T>(var value: T)
