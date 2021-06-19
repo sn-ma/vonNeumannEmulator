@@ -77,7 +77,7 @@ class TestMemoryModelSaver {
         val busModel = mockk<BusModel>()
         val memoryModel = MemoryModel(busModel, sample.modelRange)
         for (range in sample.notEmptyRanges) {
-            range.forEach { memoryModel.getRequiredMemoryCellByAddress(it).safeValue = 0xFF }
+            range.forEach { memoryModel.getRequiredMemoryCellByAddress(it).value = 0xFF }
         }
         @Suppress("DEPRECATION")
         assertEquals(sample.expectedOutput, MemoryModelSaver.calculateNotEmptyRanges(memoryModel))

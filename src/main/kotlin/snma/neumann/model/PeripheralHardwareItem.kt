@@ -19,13 +19,13 @@ abstract class PeripheralHardwareItem(
     protected abstract fun write(address: Int, value: Int)
 
     final override fun tick() {
-        val currentAddress = busModel.addressBus.safeValue
+        val currentAddress = busModel.addressBus.value
         if (currentAddress !in addressRange) {
             return
         }
         when (busModel.modeBus.value) {
-            BusModel.Mode.READ -> busModel.dataBus.safeValue = read(currentAddress)
-            BusModel.Mode.WRITE -> write(currentAddress, busModel.dataBus.safeValue)
+            BusModel.Mode.READ -> busModel.dataBus.value = read(currentAddress)
+            BusModel.Mode.WRITE -> write(currentAddress, busModel.dataBus.value)
             BusModel.Mode.IDLE -> { /* do nothing */}
         }
     }

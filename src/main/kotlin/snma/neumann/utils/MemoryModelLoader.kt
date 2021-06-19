@@ -43,7 +43,7 @@ object MemoryModelLoader {
         for (line in parsedLines) {
             for ((address, value) in line.range.asSequence().zip(line.data.asSequence())) {
                 val cell = memoryModel.getRequiredMemoryCellByAddress(address)
-                cell.safeValue = value
+                cell.value = value
             }
         }
     }

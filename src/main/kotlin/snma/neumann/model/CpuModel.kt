@@ -113,31 +113,31 @@ class CpuModel (
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_PC -> {
-                    busModel.addressBus.safeValue = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue
+                    busModel.addressBus.value = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value
                     busModel.modeBus.value = BusModel.Mode.READ
-                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue += 1
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value += 1
 
                     actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_DATA_BUS -> {
-                    busModel.addressBus.safeValue = busModel.dataBus.safeValue
+                    busModel.addressBus.value = busModel.dataBus.value
                     busModel.modeBus.value = BusModel.Mode.READ
 
                     actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.MEM_READ_REQUEST_BY_REG_BY_DATA_BUS -> {
-                    val goalRegister = getOpenRegisterByIndex(busModel.dataBus.safeValue)
+                    val goalRegister = getOpenRegisterByIndex(busModel.dataBus.value)
                     if (goalRegister == null) {
-                        setErrorInCodeWord("Wrong register number", busModel.dataBus.safeValue)
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.value)
                         return
                     }
-                    busModel.addressBus.safeValue = goalRegister.safeValue
+                    busModel.addressBus.value = goalRegister.value
                     busModel.modeBus.value = BusModel.Mode.READ
 
                     actionsStack.push(SimpleAction.TICK)
                 }
                 SimpleAction.READ_CMD_FROM_DATA_BUS_AND_DECIDE_ABOUT_ARGS_READING -> {
-                    val cmdWordRead = busModel.dataBus.safeValue
+                    val cmdWordRead = busModel.dataBus.value
 
                     // Calculate command code and addressing modes
                     var commandCode = CommandCode.parse(cmdWordRead)
@@ -171,7 +171,7 @@ class CpuModel (
                     currCommand = Triple(commandCode, addressingModeA, addressingModeB)
 
                     if (commandIsConditionalJumpAndNotNeeded(commandCode)) {
-                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue++
+                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value++
                         continue // go to reading next command
                     } else if (commandCode.commandType == CommandCode.CommandType.JUMP_CONDITIONAL) {
                         commandCode = CommandCode.JMP
@@ -309,70 +309,70 @@ class CpuModel (
                     }
                 }
                 SimpleAction.READ_REG_A_FROM_DATA_BUS -> {
-                    registers[RegisterDescription.R_A]!!.safeValue = busModel.dataBus.safeValue
+                    registers[RegisterDescription.R_A]!!.value = busModel.dataBus.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.READ_REG_A_FROM_REG_BY_DATA_BUS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.safeValue)
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.value)
                     if (goalRegisterCell == null) {
-                        setErrorInCodeWord("Wrong register number", busModel.dataBus.safeValue)
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.value)
                         return
                     }
-                    registers[RegisterDescription.R_A]!!.safeValue = goalRegisterCell.safeValue
+                    registers[RegisterDescription.R_A]!!.value = goalRegisterCell.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.READ_REG_ADDRESS_FROM_DATA_BUS -> {
-                    registers[RegisterDescription.R_ADDRESS]!!.safeValue = busModel.dataBus.safeValue
+                    registers[RegisterDescription.R_ADDRESS]!!.value = busModel.dataBus.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.SET_REG_ADDRESS_TO_PC -> {
-                    registers[RegisterDescription.R_ADDRESS]!!.safeValue =
-                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue
+                    registers[RegisterDescription.R_ADDRESS]!!.value =
+                        registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value
                 }
                 SimpleAction.INC_PROGRAM_COUNTER -> {
-                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue++
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value++
                 }
                 SimpleAction.READ_REG_ADDRESS_FROM_REG_BY_DATA_BUS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.safeValue)
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.value)
                     if (goalRegisterCell == null) {
-                        setErrorInCodeWord("Wrong register number", busModel.dataBus.safeValue)
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.value)
                         return
                     }
-                    registers[RegisterDescription.R_ADDRESS]!!.safeValue = goalRegisterCell.safeValue
+                    registers[RegisterDescription.R_ADDRESS]!!.value = goalRegisterCell.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 SimpleAction.INC_REG_A -> {
-                    registers[RegisterDescription.R_A]!!.safeValue++
+                    registers[RegisterDescription.R_A]!!.value++
                 }
                 SimpleAction.READ_REG_B_FROM_DATA_BUS -> {
-                    registers[RegisterDescription.R_B]!!.safeValue = busModel.dataBus.safeValue
+                    registers[RegisterDescription.R_B]!!.value = busModel.dataBus.value
                 }
                 SimpleAction.READ_REG_B_FROM_REG_BY_DATA_BUS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.safeValue)
+                    val goalRegisterCell = getOpenRegisterByIndex(busModel.dataBus.value)
                     if (goalRegisterCell == null) {
-                        setErrorInCodeWord("Wrong register number", busModel.dataBus.safeValue)
+                        setErrorInCodeWord("Wrong register number", busModel.dataBus.value)
                         return
                     }
-                    registers[RegisterDescription.R_B]!!.safeValue = goalRegisterCell.safeValue
+                    registers[RegisterDescription.R_B]!!.value = goalRegisterCell.value
                 }
                 SimpleAction.WRITE_RESULT_TO_REG_BY_REG_ADDRESS -> {
-                    val goalRegisterCell = getOpenRegisterByIndex(registers[RegisterDescription.R_ADDRESS]!!.safeValue)
+                    val goalRegisterCell = getOpenRegisterByIndex(registers[RegisterDescription.R_ADDRESS]!!.value)
                     if (goalRegisterCell == null) {
-                        setErrorInCodeWord("Wrong register number", registers[RegisterDescription.R_ADDRESS]!!.safeValue)
+                        setErrorInCodeWord("Wrong register number", registers[RegisterDescription.R_ADDRESS]!!.value)
                         return
                     }
 
-                    goalRegisterCell.safeValue = registers[RegisterDescription.R_B]!!.safeValue
+                    goalRegisterCell.value = registers[RegisterDescription.R_B]!!.value
                 }
                 SimpleAction.WRITE_RESULT_TO_MEMORY_BY_REG_ADDRESS -> {
-                    busModel.addressBus.safeValue = registers[RegisterDescription.R_ADDRESS]!!.safeValue
-                    busModel.dataBus.safeValue = registers[RegisterDescription.R_B]!!.safeValue
+                    busModel.addressBus.value = registers[RegisterDescription.R_ADDRESS]!!.value
+                    busModel.dataBus.value = registers[RegisterDescription.R_B]!!.value
                     busModel.modeBus.value = BusModel.Mode.WRITE
 
                     actionsStack.push(SimpleAction.CLEAN_BUS_MODE, SimpleAction.TICK)
                 }
                 SimpleAction.FINISH_RET -> {
-                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue = busModel.dataBus.safeValue
+                    registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value = busModel.dataBus.value
                     busModel.modeBus.value = BusModel.Mode.IDLE
                 }
                 is CommandExecution -> {
@@ -385,74 +385,74 @@ class CpuModel (
                             return
                         }
                         CommandCode.DLY -> {
-                            if (registers[RegisterDescription.R_A]!!.safeValue != 0) {
-                                registers[RegisterDescription.R_A]!!.safeValue--
+                            if (registers[RegisterDescription.R_A]!!.value != 0) {
+                                registers[RegisterDescription.R_A]!!.value--
                                 actionsStack.push(CommandExecution(CommandCode.DLY))
                                 actionsStack.push(SimpleAction.TICK)
                             }
                         }
                         CommandCode.MOV -> {
-                            registers[RegisterDescription.R_B]!!.safeValue =
-                                registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value =
+                                registers[RegisterDescription.R_A]!!.value
                         }
 
                         CommandCode.ADD -> {
-                            registers[RegisterDescription.R_B]!!.safeValue +=
-                                registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value +=
+                                registers[RegisterDescription.R_A]!!.value
                         }
                         CommandCode.SUB -> {
-                            registers[RegisterDescription.R_B]!!.safeValue -=
-                                registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value -=
+                                registers[RegisterDescription.R_A]!!.value
                         }
                         CommandCode.MUL -> {
-                            registers[RegisterDescription.R_B]!!.safeValue *=
-                                registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value *=
+                                registers[RegisterDescription.R_A]!!.value
                         }
                         CommandCode.DIV -> {
-                            val denominator = registers[RegisterDescription.R_A]!!.safeValue
+                            val denominator = registers[RegisterDescription.R_A]!!.value
                             if (denominator == 0) {
                                 setError("Zero division")
                                 return
                             }
-                            registers[RegisterDescription.R_B]!!.safeValue /= denominator
+                            registers[RegisterDescription.R_B]!!.value /= denominator
                         }
                         CommandCode.BAND -> {
-                            registers[RegisterDescription.R_B]!!.safeValue =
-                                registers[RegisterDescription.R_B]!!.safeValue and registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value =
+                                registers[RegisterDescription.R_B]!!.value and registers[RegisterDescription.R_A]!!.value
                         }
                         CommandCode.BOR -> {
-                            registers[RegisterDescription.R_B]!!.safeValue =
-                                registers[RegisterDescription.R_B]!!.safeValue or registers[RegisterDescription.R_A]!!.safeValue
+                            registers[RegisterDescription.R_B]!!.value =
+                                registers[RegisterDescription.R_B]!!.value or registers[RegisterDescription.R_A]!!.value
                         }
                         CommandCode.BNOT -> {
-                            registers[RegisterDescription.R_B]!!.safeValue =
-                                registers[RegisterDescription.R_A]!!.safeValue.inv()
+                            registers[RegisterDescription.R_B]!!.value =
+                                registers[RegisterDescription.R_A]!!.value.inv()
                         }
 
                         CommandCode.CMP -> {
-                            registers[RegisterDescription.R_FLAGS]!!.safeValue =
-                                (registers[RegisterDescription.R_A]!!.safeValue -
-                                        registers[RegisterDescription.R_B]!!.safeValue).sign
+                            registers[RegisterDescription.R_FLAGS]!!.value =
+                                (registers[RegisterDescription.R_A]!!.value -
+                                        registers[RegisterDescription.R_B]!!.value).sign
                         }
 
                         CommandCode.JMP -> {
-                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue =
-                                registers[RegisterDescription.R_ADDRESS]!!.safeValue
+                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value =
+                                registers[RegisterDescription.R_ADDRESS]!!.value
                         }
 
                         CommandCode.JSR -> {
-                            busModel.addressBus.safeValue = registers[RegisterDescription.R_STACK_POINTER]!!.safeValue
-                            busModel.dataBus.safeValue = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue
+                            busModel.addressBus.value = registers[RegisterDescription.R_STACK_POINTER]!!.value
+                            busModel.dataBus.value = registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value
                             busModel.modeBus.value = BusModel.Mode.WRITE
-                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.safeValue =
-                                registers[RegisterDescription.R_ADDRESS]!!.safeValue
-                            registers[RegisterDescription.R_STACK_POINTER]!!.safeValue--
+                            registers[RegisterDescription.R_PROGRAM_COUNTER]!!.value =
+                                registers[RegisterDescription.R_ADDRESS]!!.value
+                            registers[RegisterDescription.R_STACK_POINTER]!!.value--
                             actionsStack.push(SimpleAction.CLEAN_BUS_MODE, SimpleAction.TICK)
                         }
 
                         CommandCode.RET -> {
-                            registers[RegisterDescription.R_STACK_POINTER]!!.safeValue++
-                            busModel.addressBus.safeValue = registers[RegisterDescription.R_STACK_POINTER]!!.safeValue
+                            registers[RegisterDescription.R_STACK_POINTER]!!.value++
+                            busModel.addressBus.value = registers[RegisterDescription.R_STACK_POINTER]!!.value
                             busModel.modeBus.value = BusModel.Mode.READ
 
                             actionsStack.push(SimpleAction.FINISH_RET, SimpleAction.TICK)
@@ -469,11 +469,11 @@ class CpuModel (
         if (commandCode.commandType != CommandCode.CommandType.JUMP_CONDITIONAL) {
             return false
         }
-        val cmpResult = when(registers[RegisterDescription.R_FLAGS]!!.safeValue) {
+        val cmpResult = when(registers[RegisterDescription.R_FLAGS]!!.value) {
             1 -> 1
             0 -> 0
             3 -> -1 // because of bit clipping
-            else -> error("Unexpected value of compare register (${registers[RegisterDescription.R_FLAGS]!!.safeValue})")
+            else -> error("Unexpected value of compare register (${registers[RegisterDescription.R_FLAGS]!!.value})")
         }
         return when (commandCode) {
             CommandCode.JEQ -> cmpResult != 0

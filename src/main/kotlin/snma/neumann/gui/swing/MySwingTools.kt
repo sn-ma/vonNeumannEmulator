@@ -60,9 +60,11 @@ object MySwingTools {
     }
 
     private fun<T: Any> JFormattedTextField.bindBidirectional(behaviorSubject: BehaviorSubject<T>) {
-        behaviorSubject.subscribeOn(scheduler).subscribe {
-            if (this.value != it) {
-                this.value = it
+        behaviorSubject.subscribeOn(scheduler).subscribe { valueFromBS ->
+            if (formatter.stringToValue(formatter.valueToString(valueFromBS)) == valueFromBS) { // If the value is correct
+                if (this.value != valueFromBS) {
+                    this.value = valueFromBS
+                }
             }
         }
         val wasInitialized = CommonUtils.Holder(false)
