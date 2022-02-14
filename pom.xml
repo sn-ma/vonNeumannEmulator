@@ -16,7 +16,6 @@
         <kotlin.code.style>official</kotlin.code.style>
         <maven.compiler.release>11</maven.compiler.release>
         <main.class>snma.neumann.gui.swing.MainKt</main.class>
-        <javafx.version>15.0.1</javafx.version>
         <logback.version>1.2.8</logback.version>
         <slf4j.version>1.7.32</slf4j.version>
         <flatlaf.version>1.6.5</flatlaf.version>
@@ -45,7 +44,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.8.2</version>
+            <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
