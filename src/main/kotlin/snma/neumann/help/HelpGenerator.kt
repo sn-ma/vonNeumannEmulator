@@ -24,7 +24,8 @@ object HelpGenerator {
 
     fun generate() = listOf(
         HelpArticle("Introduction", "Command word is build up of three parts: the command (8 bits) and" +
-                "(4 bits for each) addressing modes for first and second argument, if any."),
+                "(4 bits for each) addressing modes for first and second argument, if any. If there is only one " +
+                "argument, higher 4 bits are used"),
         helpEnumTable("Command codes", listOf(
             "Code (HEX)" to { CommonUtils.intToHexString(it.intCode, 1)!! },
             "Short Name" to CommandCode::stringCode,
